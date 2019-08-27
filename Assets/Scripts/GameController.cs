@@ -13,7 +13,7 @@ public class GameController : MonoBehaviour
 
     public static GameController Instance => _instance;
 
-    void Awake()
+    void Start()
     {
         _instance = this;
 
@@ -23,7 +23,9 @@ public class GameController : MonoBehaviour
             typeof(SpriteSheetAnimation_Data)
         );
 
-        NativeArray<Entity> entityArray = new NativeArray<Entity>(10000, Allocator.Temp);
+        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies");
+
+        NativeArray<Entity> entityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Temp);
         entityManager.CreateEntity(entityArchetype, entityArray);
 
         foreach (Entity entity in entityArray) {
