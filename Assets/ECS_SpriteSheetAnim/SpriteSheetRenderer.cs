@@ -325,13 +325,13 @@ public class SpriteSheetRenderer : ComponentSystem {
         };
         JobHandle cullAndSortNativeQueueJobHandle = cullAndSortNativeQueueJob.Schedule(this);
         cullAndSortNativeQueueJobHandle.Complete();
-        
+
         int visibleEntityTotal = 0;
         for (int i = 0; i < POSITION_SLICES; i++) {
             visibleEntityTotal += nativeQueueArray[i].Count;
         }
 
-        
+
         for (int i = 0; i < POSITION_SLICES; i++) {
             NativeArray<RenderData> nativeArray = new NativeArray<RenderData>(nativeQueueArray[i].Count, Allocator.TempJob);
             nativeArrayArray[i] = nativeArray;
@@ -359,7 +359,6 @@ public class SpriteSheetRenderer : ComponentSystem {
 
         JobHandle.CompleteAll(jobHandleArray);
 
-        
         // Fill up individual Arrays
         NativeArray<Matrix4x4> matrixArray = new NativeArray<Matrix4x4>(visibleEntityTotal, Allocator.TempJob);
         NativeArray<Vector4> uvArray = new NativeArray<Vector4>(visibleEntityTotal, Allocator.TempJob);

@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using System;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -13,28 +14,31 @@ public class GameController : MonoBehaviour
 
     public static GameController Instance => _instance;
 
+    EntityManager _entityManager;
+    NativeArray<Entity> _entityArray;
+
     void Start()
     {
         _instance = this;
 
-        var entityManager = World.Active.EntityManager;
-        EntityArchetype entityArchetype = entityManager.CreateArchetype(
+        _entityManager = World.Active.EntityManager;
+        EntityArchetype entityArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
             typeof(SpriteSheetAnimation_Data)
         );
 
         var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies");
 
-        NativeArray<Entity> entityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Temp);
-        entityManager.CreateEntity(entityArchetype, entityArray);
+        _entityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Persistent);
+        _entityManager.CreateEntity(entityArchetype, _entityArray);
 
-        foreach (Entity entity in entityArray) {
-            entityManager.SetComponentData(entity,
+        foreach (Entity entity in _entityArray) {
+            _entityManager.SetComponentData(entity,
                 new Translation {
                     Value = new float3(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-2.5f, 2.5f), 0)
                 }
             );
-            entityManager.SetComponentData(entity,
+            _entityManager.SetComponentData(entity,
                 new SpriteSheetAnimation_Data {
                     currentFrame = UnityEngine.Random.Range(0, 7),
                     frameCount = 7,
@@ -44,6 +48,17 @@ public class GameController : MonoBehaviour
             );
         }
 
-        entityArray.Dispose();
+        //_entityArray.Dispose();
+    }
+
+    void OnDestroy()
+    {
+        DestroyEntities();
+    }
+
+    void DestroyEntities()
+    {
+        _entityManager.DestroyEntity(_entityArray);
+        _entityArray.Dispose();
     }
 }
