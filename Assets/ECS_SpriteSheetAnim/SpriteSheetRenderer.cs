@@ -134,13 +134,13 @@ public class SpriteSheetRenderer : ComponentSystem {
     private struct NativeQueueToArrayJob : IJob {
 
         public NativeQueue<RenderData> nativeQueue;
-        public NativeArray<RenderData> nativeArray;
+        public NativeList<RenderData> nativeList;
 
         public void Execute() {
             int index = 0;
             RenderData entity;
             while (nativeQueue.TryDequeue(out entity)) {
-                nativeArray[index] = entity;
+                nativeList.Add(entity);
                 index++;
             }
         }
@@ -150,20 +150,20 @@ public class SpriteSheetRenderer : ComponentSystem {
     private struct SortByPositionJob : IJob {
 
         public PositionComparer comparer;
-        public NativeArray<RenderData> sortArray;
+        public NativeList<RenderData> sortList;
 
         public void Execute() {
-            sortArray.Sort(comparer);
+            sortList.Sort(comparer);
         }
     }
 
     [BurstCompile]
     private struct FillArraysParallelJob : IJobParallelFor {
 
-        [ReadOnly] public NativeArray<RenderData> nativeArray;
-        [NativeDisableContainerSafetyRestriction] public NativeArray<Matrix4x4> matrixArray;
-        [NativeDisableContainerSafetyRestriction] public NativeArray<Vector4> uvArray;
         public int startingIndex;
+        [ReadOnly] public NativeList<RenderData> nativeArray;
+        [NativeDisableContainerSafetyRestriction] public NativeList<Matrix4x4> matrixArray;
+        [NativeDisableContainerSafetyRestriction] public NativeList<Vector4> uvArray;
 
         public void Execute(int index) {
             RenderData entityPositionWithIndex = nativeArray[index];
@@ -202,8 +202,11 @@ public class SpriteSheetRenderer : ComponentSystem {
 
     private NativeQueue<RenderData>[] nativeQueueArray;
     private NativeArray<JobHandle> jobHandleArray;
-    private NativeArray<RenderData>[] nativeArrayArray;
+    private NativeList<RenderData>[] nativeListArray;
     private PositionComparer positionComparer;
+
+    NativeList<Matrix4x4> matrixArray = new NativeList<Matrix4x4>(Allocator.Persistent);
+    NativeList<Vector4> uvArray = new NativeList<Vector4>(Allocator.Persistent);
 
     protected override void OnCreate() {
         base.OnCreate();
@@ -214,10 +217,15 @@ public class SpriteSheetRenderer : ComponentSystem {
             NativeQueue<RenderData> nativeQueue = new NativeQueue<RenderData>(Allocator.Persistent);
             nativeQueueArray[i] = nativeQueue;
         }
-        
+
         jobHandleArray = new NativeArray<JobHandle>(POSITION_SLICES, Allocator.Persistent);
 
-        nativeArrayArray = new NativeArray<RenderData>[POSITION_SLICES];
+        nativeListArray = new NativeList<RenderData>[POSITION_SLICES];
+
+        for (int i = 0; i < POSITION_SLICES; i++)
+        {
+            nativeListArray[i] = new NativeList<RenderData>(Allocator.Persistent);
+        }
 
         positionComparer = new PositionComparer();
     }
@@ -226,12 +234,16 @@ public class SpriteSheetRenderer : ComponentSystem {
         base.OnDestroy();
         for (int i = 0; i < POSITION_SLICES; i++) {
             nativeQueueArray[i].Dispose();
+            nativeListArray[i].Dispose();
         }
+        matrixArray.Dispose();
+        uvArray.Dispose();
 
         jobHandleArray.Dispose();
     }
 
     protected override void OnUpdate() {
+//        PlayerPrefs.SetInt("NumberOfEnemies", 2);
 
         for (int i = 0; i < POSITION_SLICES; i++) {
             ClearQueueJob clearQueueJob = new ClearQueueJob {
@@ -331,17 +343,15 @@ public class SpriteSheetRenderer : ComponentSystem {
             visibleEntityTotal += nativeQueueArray[i].Count;
         }
 
-
         for (int i = 0; i < POSITION_SLICES; i++) {
-            NativeArray<RenderData> nativeArray = new NativeArray<RenderData>(nativeQueueArray[i].Count, Allocator.TempJob);
-            nativeArrayArray[i] = nativeArray;
+            nativeListArray[i].Clear();
         }
 
 
         for (int i = 0; i < POSITION_SLICES; i++) {
             NativeQueueToArrayJob nativeQueueToArrayJob = new NativeQueueToArrayJob {
                 nativeQueue = nativeQueueArray[i],
-                nativeArray = nativeArrayArray[i],
+                nativeList = nativeListArray[i],
             };
             jobHandleArray[i] = nativeQueueToArrayJob.Schedule();
         }
@@ -350,8 +360,8 @@ public class SpriteSheetRenderer : ComponentSystem {
 
         // Sort by position
         for (int i = 0; i < POSITION_SLICES; i++) {
-            SortByPositionJob sortByPositionJob = new SortByPositionJob { 
-                sortArray = nativeArrayArray[i],
+            SortByPositionJob sortByPositionJob = new SortByPositionJob {
+                sortList = nativeListArray[i],
                 comparer = positionComparer
             };
             jobHandleArray[i] = sortByPositionJob.Schedule();
@@ -360,31 +370,34 @@ public class SpriteSheetRenderer : ComponentSystem {
         JobHandle.CompleteAll(jobHandleArray);
 
         // Fill up individual Arrays
-        NativeArray<Matrix4x4> matrixArray = new NativeArray<Matrix4x4>(visibleEntityTotal, Allocator.TempJob);
-        NativeArray<Vector4> uvArray = new NativeArray<Vector4>(visibleEntityTotal, Allocator.TempJob);
+        if (uvArray.Length != visibleEntityTotal)
+        {
+            uvArray.Resize(visibleEntityTotal, NativeArrayOptions.ClearMemory);
+        }
+
+        if (matrixArray.Length != visibleEntityTotal)
+        {
+            matrixArray.Resize(visibleEntityTotal, NativeArrayOptions.ClearMemory);
+        }
 
         int startingIndex = 0;
         for (int i = 0; i < POSITION_SLICES; i++) {
             //if (i != 4) continue;
+            var length = nativeListArray[i].Length;
             FillArraysParallelJob fillArraysParallelJob = new FillArraysParallelJob {
-                nativeArray = nativeArrayArray[i],
+                nativeArray = nativeListArray[i],
                 matrixArray = matrixArray,
                 uvArray = uvArray,
                 startingIndex = startingIndex
             };
-            startingIndex += nativeArrayArray[i].Length;
-            jobHandleArray[i] = fillArraysParallelJob.Schedule(nativeArrayArray[i].Length, 10);
+            startingIndex += nativeListArray[i].Length;
+            jobHandleArray[i] = fillArraysParallelJob.Schedule(length, 10);
         }
-        
+
         JobHandle.CompleteAll(jobHandleArray);
 
         //jobHandleArray.Dispose();
 
-        for (int i = 0; i < POSITION_SLICES; i++) {
-            nativeArrayArray[i].Dispose();
-        }
-
-        
         // Slice Arrays and Draw
         InitDrawMeshInstancedSlicedData();
         for (int i = 0; i < visibleEntityTotal; i += DRAW_MESH_INSTANCED_SLICE_COUNT) {
@@ -397,9 +410,9 @@ public class SpriteSheetRenderer : ComponentSystem {
 
             Graphics.DrawMeshInstanced(mesh, 0, material, matrixInstancedArray, sliceSize, materialPropertyBlock);
         }
-        
-        matrixArray.Dispose();
-        uvArray.Dispose();
+
+//        matrixArray.Dispose();
+//        uvArray.Dispose();
     }
 
 }
