@@ -41,7 +41,6 @@ public class SpriteSheetRenderer : ComponentSystem {
         }
     }
 
-
     [BurstCompile]
     private struct CullAndSortNativeQueueJob : IJobForEachWithEntity<Translation, SpriteSheetAnimation_Data> {
 
@@ -70,7 +69,7 @@ public class SpriteSheetRenderer : ComponentSystem {
         public float yTop_19;
         public float yTop_20;
 
-        public NativeQueue<RenderData>.Concurrent nativeQueue_1;
+        /*public NativeQueue<RenderData>.Concurrent nativeQueue_1;
         public NativeQueue<RenderData>.Concurrent nativeQueue_2;
         public NativeQueue<RenderData>.Concurrent nativeQueue_3;
         public NativeQueue<RenderData>.Concurrent nativeQueue_4;
@@ -89,7 +88,28 @@ public class SpriteSheetRenderer : ComponentSystem {
         public NativeQueue<RenderData>.Concurrent nativeQueue_17;
         public NativeQueue<RenderData>.Concurrent nativeQueue_18;
         public NativeQueue<RenderData>.Concurrent nativeQueue_19;
-        public NativeQueue<RenderData>.Concurrent nativeQueue_20;
+        public NativeQueue<RenderData>.Concurrent nativeQueue_20;*/
+
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_1;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_2;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_3;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_4;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_5;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_6;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_7;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_8;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_9;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_10;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_11;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_12;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_13;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_14;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_15;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_16;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_17;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_18;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_19;
+        [NativeDisableContainerSafetyRestriction] public NativeList<RenderData> nativeList_20;
 
         public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref SpriteSheetAnimation_Data spriteSheetAnimationData) {
             float positionX = translation.Value.x;
@@ -105,32 +125,112 @@ public class SpriteSheetRenderer : ComponentSystem {
 
                 //nativeQueue_1.Enqueue(entityPosition); return;
 
-                if      (positionY < yTop_20) { nativeQueue_20.Enqueue(entityPosition); }
-                else if (positionY < yTop_19) { nativeQueue_19.Enqueue(entityPosition); }
-                else if (positionY < yTop_18) { nativeQueue_18.Enqueue(entityPosition); }
-                else if (positionY < yTop_17) { nativeQueue_17.Enqueue(entityPosition); }
-                else if (positionY < yTop_16) { nativeQueue_16.Enqueue(entityPosition); }
-                else if (positionY < yTop_15) { nativeQueue_15.Enqueue(entityPosition); }
-                else if (positionY < yTop_14) { nativeQueue_14.Enqueue(entityPosition); }
-                else if (positionY < yTop_13) { nativeQueue_13.Enqueue(entityPosition); }
-                else if (positionY < yTop_12) { nativeQueue_12.Enqueue(entityPosition); }
-                else if (positionY < yTop_11) { nativeQueue_11.Enqueue(entityPosition); }
-                else if (positionY < yTop_10) { nativeQueue_10.Enqueue(entityPosition); }
-                else if (positionY < yTop_9)  { nativeQueue_9.Enqueue(entityPosition); }
-                else if (positionY < yTop_8)  { nativeQueue_8.Enqueue(entityPosition); }
-                else if (positionY < yTop_7)  { nativeQueue_7.Enqueue(entityPosition); }
-                else if (positionY < yTop_6)  { nativeQueue_6.Enqueue(entityPosition); }
-                else if (positionY < yTop_5)  { nativeQueue_5.Enqueue(entityPosition); }
-                else if (positionY < yTop_4)  { nativeQueue_4.Enqueue(entityPosition); }
-                else if (positionY < yTop_3)  { nativeQueue_3.Enqueue(entityPosition); }
-                else if (positionY < yTop_2)  { nativeQueue_2.Enqueue(entityPosition); }
-                else { nativeQueue_1.Enqueue(entityPosition); }
+                if (positionY < yTop_20)
+                {
+                    //nativeQueue_20.Enqueue(entityPosition);
+                    nativeList_20.Add(entityPosition);
+                }
+                else if (positionY < yTop_19)
+                {
+                    //nativeQueue_19.Enqueue(entityPosition);
+                    nativeList_19.Add(entityPosition);
+                }
+                else if (positionY < yTop_18)
+                {
+                    //nativeQueue_18.Enqueue(entityPosition);
+                    nativeList_18.Add(entityPosition);
+                }
+                else if (positionY < yTop_17)
+                {
+                    //nativeQueue_17.Enqueue(entityPosition);
+                    nativeList_17.Add(entityPosition);
+                }
+                else if (positionY < yTop_16)
+                {
+                    //nativeQueue_16.Enqueue(entityPosition);
+                    nativeList_16.Add(entityPosition);
+                }
+                else if (positionY < yTop_15)
+                {
+                    //nativeQueue_15.Enqueue(entityPosition);
+                    nativeList_15.Add(entityPosition);
+                }
+                else if (positionY < yTop_14)
+                {
+                    //nativeQueue_14.Enqueue(entityPosition);
+                    nativeList_14.Add(entityPosition);
+                }
+                else if (positionY < yTop_13)
+                {
+                    //nativeQueue_13.Enqueue(entityPosition);
+                    nativeList_13.Add(entityPosition);
+                }
+                else if (positionY < yTop_12)
+                {
+                    //nativeQueue_12.Enqueue(entityPosition);
+                    nativeList_12.Add(entityPosition);
+                }
+                else if (positionY < yTop_11)
+                {
+                    //nativeQueue_11.Enqueue(entityPosition);
+                    nativeList_11.Add(entityPosition);
+                }
+                else if (positionY < yTop_10)
+                {
+                    //nativeQueue_10.Enqueue(entityPosition);
+                    nativeList_10.Add(entityPosition);
+                }
+                else if (positionY < yTop_9)
+                {
+                    //nativeQueue_9.Enqueue(entityPosition);
+                    nativeList_9.Add(entityPosition);
+                }
+                else if (positionY < yTop_8)
+                {
+                    //nativeQueue_8.Enqueue(entityPosition);
+                    nativeList_8.Add(entityPosition);
+                }
+                else if (positionY < yTop_7)
+                {
+                    //nativeQueue_7.Enqueue(entityPosition);
+                    nativeList_7.Add(entityPosition);
+                }
+                else if (positionY < yTop_6)
+                {
+                    //nativeQueue_6.Enqueue(entityPosition);
+                    nativeList_6.Add(entityPosition);
+                }
+                else if (positionY < yTop_5)
+                {
+                    //nativeQueue_5.Enqueue(entityPosition);
+                    nativeList_5.Add(entityPosition);
+                }
+                else if (positionY < yTop_4)
+                {
+                    //nativeQueue_4.Enqueue(entityPosition);
+                    nativeList_4.Add(entityPosition);
+                }
+                else if (positionY < yTop_3)
+                {
+                    //nativeQueue_3.Enqueue(entityPosition);
+                    nativeList_3.Add(entityPosition);
+                }
+                else if (positionY < yTop_2)
+                {
+                    //nativeQueue_2.Enqueue(entityPosition);
+                    nativeList_2.Add(entityPosition);
+                }
+                else
+                {
+                    //nativeQueue_1.Enqueue(entityPosition);
+                    nativeList_1.Add(entityPosition);
+                }
             }
         }
-
     }
 
-    [BurstCompile]
+    NativeQueue<RenderData> queue;
+    /*[BurstCompile]
     private struct NativeQueueToArrayJob : IJob {
 
         public NativeQueue<RenderData> nativeQueue;
@@ -144,7 +244,7 @@ public class SpriteSheetRenderer : ComponentSystem {
                 index++;
             }
         }
-    }
+    }*/
 
     [BurstCompile]
     private struct SortByPositionJob : IJob {
@@ -174,9 +274,11 @@ public class SpriteSheetRenderer : ComponentSystem {
 
     [BurstCompile]
     private struct ClearQueueJob : IJob {
-        public NativeQueue<RenderData> nativeQueue;
+        //public NativeQueue<RenderData> nativeQueue;
+        public NativeList<RenderData> nativeList;
         public void Execute() {
-            nativeQueue.Clear();
+            //nativeQueue.Clear();
+            nativeList.Clear();
         }
     }
 
@@ -200,24 +302,29 @@ public class SpriteSheetRenderer : ComponentSystem {
 
     private const int POSITION_SLICES = 20;
 
-    private NativeQueue<RenderData>[] nativeQueueArray;
+    //private NativeQueue<RenderData>[] nativeQueueArray;
+    private NativeList<RenderData>[] nativeListArray;
     private NativeArray<JobHandle> jobHandleArray;
-    private NativeArray<RenderData>[] nativeArrayArray;
+    //private NativeArray<RenderData>[] nativeArrayArray;
     private PositionComparer positionComparer;
+    //NativeMultiHashMap<int, NativeList<RenderData>> hashMap;
 
     protected override void OnCreate() {
         base.OnCreate();
 
-        nativeQueueArray = new NativeQueue<RenderData>[POSITION_SLICES];
+        //nativeQueueArray = new NativeQueue<RenderData>[POSITION_SLICES];
+        nativeListArray = new NativeList<RenderData>[POSITION_SLICES];
+        //hashMap = new NativeMultiHashMap<int, NativeList<RenderData>>();
 
         for (int i = 0; i < POSITION_SLICES; i++) {
-            NativeQueue<RenderData> nativeQueue = new NativeQueue<RenderData>(Allocator.Persistent);
-            nativeQueueArray[i] = nativeQueue;
+            //nativeQueueArray[i] = new NativeQueue<RenderData>(Allocator.Persistent);
+            nativeListArray[i] = new NativeList<RenderData>(Allocator.Persistent);
+            //hashMap.Add(i, new NativeList<RenderData>(Allocator.Persistent));
         }
-        
+
         jobHandleArray = new NativeArray<JobHandle>(POSITION_SLICES, Allocator.Persistent);
 
-        nativeArrayArray = new NativeArray<RenderData>[POSITION_SLICES];
+        //nativeArrayArray = new NativeArray<RenderData>[POSITION_SLICES];
 
         positionComparer = new PositionComparer();
     }
@@ -225,7 +332,7 @@ public class SpriteSheetRenderer : ComponentSystem {
     protected override void OnDestroy() {
         base.OnDestroy();
         for (int i = 0; i < POSITION_SLICES; i++) {
-            nativeQueueArray[i].Dispose();
+            nativeListArray[i].Dispose();
         }
 
         jobHandleArray.Dispose();
@@ -235,7 +342,8 @@ public class SpriteSheetRenderer : ComponentSystem {
 
         for (int i = 0; i < POSITION_SLICES; i++) {
             ClearQueueJob clearQueueJob = new ClearQueueJob {
-                nativeQueue = nativeQueueArray[i]
+                //nativeQueue = nativeQueueArray[i],
+                nativeList = nativeListArray[i]
             };
             jobHandleArray[i] = clearQueueJob.Schedule();
         }
@@ -302,7 +410,7 @@ public class SpriteSheetRenderer : ComponentSystem {
             yTop_19 = yTop_19,
             yTop_20 = yTop_20,
 
-            nativeQueue_1 = nativeQueueArray[0].ToConcurrent(),
+            /*nativeQueue_1 = nativeQueueArray[0].ToConcurrent(),
             nativeQueue_2 = nativeQueueArray[1].ToConcurrent(),
             nativeQueue_3 = nativeQueueArray[2].ToConcurrent(),
             nativeQueue_4 = nativeQueueArray[3].ToConcurrent(),
@@ -321,24 +429,45 @@ public class SpriteSheetRenderer : ComponentSystem {
             nativeQueue_17 = nativeQueueArray[16].ToConcurrent(),
             nativeQueue_18 = nativeQueueArray[17].ToConcurrent(),
             nativeQueue_19 = nativeQueueArray[18].ToConcurrent(),
-            nativeQueue_20 = nativeQueueArray[19].ToConcurrent(),
+            nativeQueue_20 = nativeQueueArray[19].ToConcurrent(),*/
+
+            nativeList_1 = nativeListArray[0],
+            nativeList_2 = nativeListArray[1],
+            nativeList_3 = nativeListArray[2],
+            nativeList_4 = nativeListArray[3],
+            nativeList_5 = nativeListArray[4],
+            nativeList_6 = nativeListArray[5],
+            nativeList_7 = nativeListArray[6],
+            nativeList_8 = nativeListArray[7],
+            nativeList_9 = nativeListArray[8],
+            nativeList_10 = nativeListArray[9],
+            nativeList_11 = nativeListArray[10],
+            nativeList_12 = nativeListArray[11],
+            nativeList_13 = nativeListArray[12],
+            nativeList_14 = nativeListArray[13],
+            nativeList_15 = nativeListArray[14],
+            nativeList_16 = nativeListArray[15],
+            nativeList_17 = nativeListArray[16],
+            nativeList_18 = nativeListArray[17],
+            nativeList_19 = nativeListArray[18],
+            nativeList_20 = nativeListArray[19],
         };
         JobHandle cullAndSortNativeQueueJobHandle = cullAndSortNativeQueueJob.Schedule(this);
         cullAndSortNativeQueueJobHandle.Complete();
 
         int visibleEntityTotal = 0;
         for (int i = 0; i < POSITION_SLICES; i++) {
-            visibleEntityTotal += nativeQueueArray[i].Count;
+            visibleEntityTotal += nativeListArray[i].Length;
         }
 
 
-        for (int i = 0; i < POSITION_SLICES; i++) {
+        /*for (int i = 0; i < POSITION_SLICES; i++) {
             NativeArray<RenderData> nativeArray = new NativeArray<RenderData>(nativeQueueArray[i].Count, Allocator.TempJob);
             nativeArrayArray[i] = nativeArray;
-        }
+        }*/
 
 
-        for (int i = 0; i < POSITION_SLICES; i++) {
+        /*for (int i = 0; i < POSITION_SLICES; i++) {
             NativeQueueToArrayJob nativeQueueToArrayJob = new NativeQueueToArrayJob {
                 nativeQueue = nativeQueueArray[i],
                 nativeArray = nativeArrayArray[i],
@@ -346,12 +475,12 @@ public class SpriteSheetRenderer : ComponentSystem {
             jobHandleArray[i] = nativeQueueToArrayJob.Schedule();
         }
 
-        JobHandle.CompleteAll(jobHandleArray);
+        JobHandle.CompleteAll(jobHandleArray);*/
 
         // Sort by position
         for (int i = 0; i < POSITION_SLICES; i++) {
-            SortByPositionJob sortByPositionJob = new SortByPositionJob { 
-                sortArray = nativeArrayArray[i],
+            SortByPositionJob sortByPositionJob = new SortByPositionJob {
+                sortArray = nativeListArray[i],
                 comparer = positionComparer
             };
             jobHandleArray[i] = sortByPositionJob.Schedule();
@@ -367,24 +496,24 @@ public class SpriteSheetRenderer : ComponentSystem {
         for (int i = 0; i < POSITION_SLICES; i++) {
             //if (i != 4) continue;
             FillArraysParallelJob fillArraysParallelJob = new FillArraysParallelJob {
-                nativeArray = nativeArrayArray[i],
+                nativeArray = nativeListArray[i],
                 matrixArray = matrixArray,
                 uvArray = uvArray,
                 startingIndex = startingIndex
             };
-            startingIndex += nativeArrayArray[i].Length;
-            jobHandleArray[i] = fillArraysParallelJob.Schedule(nativeArrayArray[i].Length, 10);
+            startingIndex += nativeListArray[i].Length;
+            jobHandleArray[i] = fillArraysParallelJob.Schedule(nativeListArray[i].Length, 10);
         }
-        
+
         JobHandle.CompleteAll(jobHandleArray);
 
         //jobHandleArray.Dispose();
 
-        for (int i = 0; i < POSITION_SLICES; i++) {
+        /*for (int i = 0; i < POSITION_SLICES; i++) {
             nativeArrayArray[i].Dispose();
-        }
+        }*/
 
-        
+
         // Slice Arrays and Draw
         InitDrawMeshInstancedSlicedData();
         for (int i = 0; i < visibleEntityTotal; i += DRAW_MESH_INSTANCED_SLICE_COUNT) {
@@ -397,7 +526,7 @@ public class SpriteSheetRenderer : ComponentSystem {
 
             Graphics.DrawMeshInstanced(mesh, 0, material, matrixInstancedArray, sliceSize, materialPropertyBlock);
         }
-        
+
         matrixArray.Dispose();
         uvArray.Dispose();
     }
