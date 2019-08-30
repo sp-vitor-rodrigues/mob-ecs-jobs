@@ -15,7 +15,7 @@ public class GameController : MonoBehaviour
     public static GameController Instance => _instance;
 
     EntityManager _entityManager;
-    NativeArray<Entity> _entityArray;
+    public NativeArray<Entity> EntityArray;
 
     void Start()
     {
@@ -29,10 +29,10 @@ public class GameController : MonoBehaviour
 
         var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies");
 
-        _entityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Persistent);
-        _entityManager.CreateEntity(entityArchetype, _entityArray);
+        EntityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Persistent);
+        _entityManager.CreateEntity(entityArchetype, EntityArray);
 
-        foreach (Entity entity in _entityArray) {
+        foreach (Entity entity in EntityArray) {
             _entityManager.SetComponentData(entity,
                 new Translation {
                     Value = new float3(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-2.5f, 2.5f), 0)
@@ -58,7 +58,7 @@ public class GameController : MonoBehaviour
 
     void DestroyEntities()
     {
-        _entityManager.DestroyEntity(_entityArray);
-        _entityArray.Dispose();
+        _entityManager.DestroyEntity(EntityArray);
+        EntityArray.Dispose();
     }
 }
