@@ -1,5 +1,4 @@
-﻿using System;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -15,7 +14,6 @@ public class GameController : MonoBehaviour
     public static GameController Instance => _instance;
 
     EntityManager _entityManager;
-    public NativeArray<Entity> EntityArray;
 
     void Start()
     {
@@ -27,12 +25,12 @@ public class GameController : MonoBehaviour
             typeof(SpriteSheetAnimation_Data)
         );
 
-        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies");
+        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies", 1);
 
-        EntityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Persistent);
-        _entityManager.CreateEntity(entityArchetype, EntityArray);
+        var entityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Temp);
+        _entityManager.CreateEntity(entityArchetype, entityArray);
 
-        foreach (Entity entity in EntityArray) {
+        foreach (Entity entity in entityArray) {
             _entityManager.SetComponentData(entity,
                 new Translation {
                     Value = new float3(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-2.5f, 2.5f), 0)
@@ -58,7 +56,9 @@ public class GameController : MonoBehaviour
 
     void DestroyEntities()
     {
-        _entityManager.DestroyEntity(EntityArray);
-        EntityArray.Dispose();
+        if (World.Active != null)
+        {
+            _entityManager?.DestroyEntity(_entityManager.GetAllEntities());
+        }
     }
 }

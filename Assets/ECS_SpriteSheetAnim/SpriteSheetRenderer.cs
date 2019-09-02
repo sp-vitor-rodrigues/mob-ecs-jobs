@@ -379,20 +379,28 @@ public class SpriteSheetRenderer : ComponentSystem {
         yTop_1 += marginY;
         yBottom -= marginY;
 
+        var entities = World.Active.EntityManager.GetAllEntities(Allocator.Persistent);
+        var length = entities.Length;
         translationGetter = GetComponentDataFromEntity<Translation>(true);
 
         for (int i = 0; i < POSITION_SLICES; i++)
         {
             var filterJob = new FilterJob
             {
-                nativeArray = GameController.Instance.EntityArray,
+                nativeArray = entities,
                 translationGetter = translationGetter,
                 MinY = i < POSITION_SLICES - 1 ? tops[i + 1] : float.MinValue,
                 MaxY = tops[i],
+                xMin = xMin,
+                xMax = xMax,
+                yBottom = yBottom,
+                yTop_1 = yTop_1,
             };
-            var handle = filterJob.ScheduleAppend(counters[i], GameController.Instance.EntityArray.Length, POSITION_SLICES);
+            var handle = filterJob.ScheduleAppend(counters[i], length, POSITION_SLICES);
             handle.Complete();
         }
+        entities.Dispose();
+
         for (int i = 0; i < POSITION_SLICES; i++)
         {
             nativeArrayArray[i] = new NativeArray<RenderData>(counters[i].Length, Allocator.TempJob);
