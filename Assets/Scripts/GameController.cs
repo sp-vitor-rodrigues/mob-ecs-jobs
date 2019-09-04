@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using System.Collections;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -66,6 +67,12 @@ public struct RenderData
     public Vector4 uv;
 }
 
+public struct MoveTo : IComponentData {
+    public bool Move;
+    public float3 Position;
+    public float MoveSpeed;
+}
+
 public class GameController : MonoBehaviour
 {
     private const int POSITION_SLICES = 20;
@@ -82,8 +89,14 @@ public class GameController : MonoBehaviour
     float[] _slicesPositions = new float[POSITION_SLICES];
 
     EntityManager _entityManager;
-    
+
+    EntityArchetype _meleeArchetype;
+
     public bool ReadyToRun = false;
+
+    int _timeBetweenSpawns = 1;
+    int _amountOfUnitsPerSpawn = 50;
+    int _totalUnits = 0;
 
     void Start()
     {
@@ -91,35 +104,35 @@ public class GameController : MonoBehaviour
         _instance = this;
 
         _entityManager = World.Active.EntityManager;
-        EntityArchetype entityArchetype = _entityManager.CreateArchetype(
+
+        _meleeArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
-            typeof(SpriteSheetAnimation_Data)
+            typeof(SpriteSheetAnimation_Data),
+            typeof(MoveTo)
         );
 
-        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies", 1);
-
-        var entityArray = new NativeArray<Entity>(storedNumberOfEnemies, Allocator.Temp);
-        _entityManager.CreateEntity(entityArchetype, entityArray);
-
-        foreach (Entity entity in entityArray) {
-            _entityManager.SetComponentData(entity,
-                new Translation {
-                    Value = new float3(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-2.5f, 2.5f), 0)
-                }
-            );
-            _entityManager.SetComponentData(entity,
-                new SpriteSheetAnimation_Data {
-                    currentFrame = UnityEngine.Random.Range(0, 7),
-                    frameCount = 7,
-                    frameTimer = UnityEngine.Random.Range(0f, 1f),
-                    frameTimerMax = .1f
-                }
-            );
-            AddPositionData(entity);
-        }
+        StartCoroutine(CreateEnemies());
 
         ReadyToRun = true;
     }
+
+    IEnumerator CreateEnemies()
+    {
+        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies", 1);
+
+        while (_totalUnits < storedNumberOfEnemies)
+        {
+            var unitsToSpawn = (storedNumberOfEnemies - _totalUnits) < _amountOfUnitsPerSpawn
+                ? storedNumberOfEnemies - _totalUnits
+                : _amountOfUnitsPerSpawn;
+
+            CreateMeleeEnemies(unitsToSpawn);
+            _totalUnits += unitsToSpawn;
+
+            yield return new WaitForSeconds(_timeBetweenSpawns);
+        }
+    }
+
 
     void InitializeSlices()
     {
@@ -170,6 +183,40 @@ public class GameController : MonoBehaviour
             };
             EntitiesPositionData[index].Add(positionData);
         }
+    }
+
+    void CreateMeleeEnemies(int amount)
+    {
+        var entityArray = new NativeArray<Entity>(amount, Allocator.Temp);
+
+        _entityManager.CreateEntity(_meleeArchetype, entityArray);
+
+        foreach (Entity entity in entityArray)
+        {
+            var position = new float3(UnityEngine.Random.Range(10f, 30f), UnityEngine.Random.Range(-5f, 5f), 0);
+            var targetPosition = new float3(-10f, position.y, 0);
+            _entityManager.SetComponentData(entity,
+                new Translation
+                {
+                    Value = position
+                }
+            );
+            _entityManager.SetComponentData(entity,
+                new SpriteSheetAnimation_Data
+                {
+                    currentFrame = UnityEngine.Random.Range(0, 7),
+                    frameCount = 7,
+                    frameTimer = UnityEngine.Random.Range(0f, 1f),
+                    frameTimerMax = .1f
+                }
+            );
+            _entityManager.SetComponentData(entity, new MoveTo
+            {
+                Move = true, Position = targetPosition, MoveSpeed = 0.2f
+            });
+            AddPositionData(entity);
+        }
+        entityArray.Dispose();
     }
 
     void OnDestroy()
