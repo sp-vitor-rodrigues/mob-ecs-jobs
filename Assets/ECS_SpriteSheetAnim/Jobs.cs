@@ -7,13 +7,6 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-
-public struct RenderData {
-    public Entity entity;
-    public float3 position;
-    public Matrix4x4 matrix;
-    public Vector4 uv;
-}
     
 public struct PositionComparer : IComparer<RenderData> {
     public int Compare(RenderData a, RenderData b) {
@@ -238,7 +231,6 @@ public struct CullAndSortNativeQueueJob : IJobForEachWithEntity<Translation, Spr
         if (positionX > xMin && positionX < xMax && positionY < yTop_1 && positionY > yBottom) {
             // Valid position
             RenderData entityPosition = new RenderData {
-                entity = entity,
                 position = translation.Value,
                 uv = spriteSheetAnimationData.uv,
                 matrix = spriteSheetAnimationData.matrix
@@ -375,10 +367,55 @@ public struct FillArraysParallelJob : IJobParallelFor {
 
     public void Execute(int index) {
         RenderData entityPositionWithIndex = nativeArray[index];
-        if (entityPositionWithIndex.entity != Entity.Null)
+        //if (entityPositionWithIndex.entity != Entity.Null)
         {
             matrixArray[startingIndex + index] = entityPositionWithIndex.matrix;
             uvArray[startingIndex + index] = entityPositionWithIndex.uv;
         }
+    }
+}
+
+
+// NEW STUFF
+
+[BurstCompile]
+public struct NewSortByPositionJob : IJob {
+
+    public NewPositionComparer comparer;
+    public NativeList<PositionData> sortArray;
+
+    public void Execute() {
+        sortArray.Sort(comparer);
+    }
+}
+
+public struct NewPositionComparer : IComparer<PositionData> {
+    public int Compare(PositionData a, PositionData b) {
+        if (a.Position.y < b.Position.y)
+            return 1;
+        else
+            return -1;
+    }
+}
+
+
+[BurstCompile]
+public struct FillArraysParallelJobNew : IJobParallelFor {
+
+    [ReadOnly] public NativeList<PositionData> positionsData;
+    [NativeDisableContainerSafetyRestriction] public NativeArray<Matrix4x4> matrixArray;
+    [NativeDisableContainerSafetyRestriction] public NativeArray<Vector4> uvArray;
+    public int startingIndex;
+
+    [ReadOnly]
+    public ComponentDataFromEntity<SpriteSheetAnimation_Data> animationDataGetter;
+
+
+    public void Execute(int index) {
+        PositionData entityPositionWithIndex = positionsData[index];
+        SpriteSheetAnimation_Data animationData = animationDataGetter[entityPositionWithIndex.Entity];
+
+        matrixArray[startingIndex + index] = animationData.matrix;
+        uvArray[startingIndex + index] = animationData.uv;
     }
 }

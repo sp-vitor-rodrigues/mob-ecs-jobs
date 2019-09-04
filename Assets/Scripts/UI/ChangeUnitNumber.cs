@@ -21,7 +21,7 @@ public class ChangeUnitNumber : MonoBehaviour
     public void ApplyNumberOfEnemies()
     {
         var inputResult = int.Parse(InputField.text);
-        if (inputResult > 10000)
+        if (inputResult > 100000)
         {
             return;
         }
