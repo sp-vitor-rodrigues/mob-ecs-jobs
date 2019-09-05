@@ -10,12 +10,9 @@
     --------------------------------------------------
  */
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Entities;
 using Unity.Burst;
-using Unity.Collections;
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -26,6 +23,8 @@ public struct SpriteSheetAnimation_Data : IComponentData {
     public int frameCount;
     public float frameTimer;
     public float frameTimerMax;
+
+    public bool inverted;
 
     public Vector4 uv;
     public Matrix4x4 matrix;
@@ -41,9 +40,21 @@ public class SpriteSheetAnimation_Animate : JobComponentSystem {
 
         public void Execute(ref SpriteSheetAnimation_Data spriteSheetAnimationData, ref Translation translation) {
             spriteSheetAnimationData.frameTimer += deltaTime;
-            while (spriteSheetAnimationData.frameTimer >= spriteSheetAnimationData.frameTimerMax) {
+            while (spriteSheetAnimationData.frameTimer >= spriteSheetAnimationData.frameTimerMax)
+            {
                 spriteSheetAnimationData.frameTimer -= spriteSheetAnimationData.frameTimerMax;
-                spriteSheetAnimationData.currentFrame = (spriteSheetAnimationData.currentFrame + 1) % spriteSheetAnimationData.frameCount;
+                if (spriteSheetAnimationData.inverted)
+                {
+                    spriteSheetAnimationData.currentFrame -= 1;
+                    if (spriteSheetAnimationData.currentFrame < 0)
+                    {
+                        spriteSheetAnimationData.currentFrame = spriteSheetAnimationData.frameCount - 1;
+                    }
+                }
+                else
+                {
+                    spriteSheetAnimationData.currentFrame = (spriteSheetAnimationData.currentFrame + 1) % spriteSheetAnimationData.frameCount;
+                }
 
                 float uvWidth = 1f / spriteSheetAnimationData.frameCount;
                 float uvHeight = 1f;

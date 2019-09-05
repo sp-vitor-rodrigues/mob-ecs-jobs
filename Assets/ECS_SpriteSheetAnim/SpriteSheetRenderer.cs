@@ -35,7 +35,7 @@ public class SpriteSheetRenderer : ComponentSystem {
         materialPropertyBlock = new MaterialPropertyBlock();
         shaderMainTexUVid = Shader.PropertyToID("_MainTex_UV");
         mesh = GameController.Instance.Mesh;
-        material = GameController.Instance.Material;
+        //material = GameController.Instance.EnemyMaterials;
     }
 
     private const int POSITION_SLICES = 20;
@@ -69,67 +69,80 @@ public class SpriteSheetRenderer : ComponentSystem {
             return;
         }
 
-        int visibleEntityTotal = 0;
-        for (int i = 0; i < POSITION_SLICES; i++) {
-            visibleEntityTotal += GameController.Instance.EntitiesPositionData[i].PositionsData.Length;
-        }
-
-        // Sort by position
-        for (int i = 0; i < POSITION_SLICES; i++)
+        for (int factionsIndex = 0; factionsIndex < (int)SlicePositionData.FactionType.Total; factionsIndex++)
         {
-
-            if (GameController.Instance.EntitiesPositionData[i].DataChanged)
+            if (GameController.Instance.FactionsData[factionsIndex] == null)
             {
-                var positionsData = GameController.Instance.EntitiesPositionData[i].PositionsData;
-                NewSortByPositionJob sortByPositionJob = new NewSortByPositionJob
+                continue;
+            }
+
+            for (int characterIndex = 0; characterIndex < GameController.Instance.FactionsData[factionsIndex].CharacterData.Length; characterIndex++)
+            {
+                var characterData = GameController.Instance.FactionsData[factionsIndex].CharacterData[characterIndex];
+
+                int visibleEntityTotal = 0;
+                for (int i = 0; i < POSITION_SLICES; i++) {
+                    visibleEntityTotal += characterData.SlicePositionData[i].PositionsData.Length;
+                }
+
+                // Sort by position
+                for (int i = 0; i < POSITION_SLICES; i++)
                 {
-                    sortArray = positionsData,
-                    comparer = newPositionComparer
-                };
-                jobHandleArray[i] = sortByPositionJob.Schedule();
-                GameController.Instance.EntitiesPositionData[i].DataChanged = false;
+                    if (characterData.SlicePositionData[i].DataChanged)
+                    {
+                        var positionsData = characterData.SlicePositionData[i].PositionsData;
+                        NewSortByPositionJob sortByPositionJob = new NewSortByPositionJob
+                        {
+                            sortArray = positionsData,
+                            comparer = newPositionComparer
+                        };
+                        jobHandleArray[i] = sortByPositionJob.Schedule();
+                        characterData.SlicePositionData[i].DataChanged = false;
+                    }
+                }
+
+                JobHandle.CompleteAll(jobHandleArray);
+
+                // Fill up individual Arrays
+                NativeArray<Matrix4x4> matrixArray = new NativeArray<Matrix4x4>(visibleEntityTotal, Allocator.TempJob);
+                NativeArray<Vector4> uvArray = new NativeArray<Vector4>(visibleEntityTotal, Allocator.TempJob);
+
+                animDataGetter = GetComponentDataFromEntity<SpriteSheetAnimation_Data>(true);
+
+                int startingIndex = 0;
+                for (int i = 0; i < POSITION_SLICES; i++)
+                {
+                    var positionsData = characterData.SlicePositionData[i].PositionsData;
+                    FillArraysParallelJobNew fillArraysParallelJob = new FillArraysParallelJobNew {
+                        positionsData = positionsData,
+                        matrixArray = matrixArray,
+                        uvArray = uvArray,
+                        startingIndex = startingIndex,
+                        animationDataGetter = animDataGetter
+                    };
+                    startingIndex += positionsData.Length;
+                    jobHandleArray[i] = fillArraysParallelJob.Schedule(positionsData.Length, 10);
+                }
+
+                JobHandle.CompleteAll(jobHandleArray);
+
+                // Slice Arrays and Draw
+                InitDrawMeshInstancedSlicedData();
+                for (int i = 0; i < visibleEntityTotal; i += DRAW_MESH_INSTANCED_SLICE_COUNT) {
+                    int sliceSize = math.min(visibleEntityTotal- i, DRAW_MESH_INSTANCED_SLICE_COUNT);
+
+                    NativeArray<Matrix4x4>.Copy(matrixArray, i, matrixInstancedArray, 0, sliceSize);
+                    NativeArray<Vector4>.Copy(uvArray, i, uvInstancedArray, 0, sliceSize);
+
+                    materialPropertyBlock = new MaterialPropertyBlock();
+                    materialPropertyBlock.SetVectorArray(shaderMainTexUVid, uvInstancedArray);
+
+                    Graphics.DrawMeshInstanced(characterData.Mesh, 0, characterData.Material, matrixInstancedArray, sliceSize, materialPropertyBlock);
+                }
+
+                matrixArray.Dispose();
+                uvArray.Dispose();
             }
         }
-
-        JobHandle.CompleteAll(jobHandleArray);
-
-        // Fill up individual Arrays
-        NativeArray<Matrix4x4> matrixArray = new NativeArray<Matrix4x4>(visibleEntityTotal, Allocator.TempJob);
-        NativeArray<Vector4> uvArray = new NativeArray<Vector4>(visibleEntityTotal, Allocator.TempJob);
-
-        animDataGetter = GetComponentDataFromEntity<SpriteSheetAnimation_Data>(true);
-
-        int startingIndex = 0;
-        for (int i = 0; i < POSITION_SLICES; i++)
-        {
-            var positionsData = GameController.Instance.EntitiesPositionData[i].PositionsData;
-            FillArraysParallelJobNew fillArraysParallelJob = new FillArraysParallelJobNew {
-                positionsData = positionsData,
-                matrixArray = matrixArray,
-                uvArray = uvArray,
-                startingIndex = startingIndex,
-                animationDataGetter = animDataGetter
-            };
-            startingIndex += positionsData.Length;
-            jobHandleArray[i] = fillArraysParallelJob.Schedule(positionsData.Length, 10);
-        }
-
-        JobHandle.CompleteAll(jobHandleArray);
-
-        // Slice Arrays and Draw
-        InitDrawMeshInstancedSlicedData();
-        for (int i = 0; i < visibleEntityTotal; i += DRAW_MESH_INSTANCED_SLICE_COUNT) {
-            int sliceSize = math.min(visibleEntityTotal- i, DRAW_MESH_INSTANCED_SLICE_COUNT);
-
-            NativeArray<Matrix4x4>.Copy(matrixArray, i, matrixInstancedArray, 0, sliceSize);
-            NativeArray<Vector4>.Copy(uvArray, i, uvInstancedArray, 0, sliceSize);
-
-            materialPropertyBlock.SetVectorArray(shaderMainTexUVid, uvInstancedArray);
-
-            Graphics.DrawMeshInstanced(mesh, 0, material, matrixInstancedArray, sliceSize, materialPropertyBlock);
-        }
-
-        matrixArray.Dispose();
-        uvArray.Dispose();
     }
 }

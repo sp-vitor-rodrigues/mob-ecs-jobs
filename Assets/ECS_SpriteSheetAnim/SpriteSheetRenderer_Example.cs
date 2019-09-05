@@ -37,7 +37,7 @@ public class SpriteSheetRenderer_Example : ComponentSystem {
         materialPropertyBlock = new MaterialPropertyBlock();
         shaderMainTexUVid = Shader.PropertyToID("_MainTex_UV");
         mesh = GameController.Instance.Mesh;
-        material = GameController.Instance.Material;
+        //material = GameController.Instance.EnemyMaterials;
     }
 
     private const int POSITION_SLICES = 20;

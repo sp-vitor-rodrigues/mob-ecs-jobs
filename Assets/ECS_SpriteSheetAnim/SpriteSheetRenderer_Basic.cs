@@ -207,7 +207,7 @@ public class SpriteSheetRenderer_Basic : ComponentSystem {
         MaterialPropertyBlock materialPropertyBlock = new MaterialPropertyBlock();
         Vector4[] uv = new Vector4[1];
         Mesh quadMesh = GameController.Instance.Mesh;
-        Material material = GameController.Instance.Material;
+//        Material material = GameController.Instance.EnemyMaterials;
         int shaderPropertyId = Shader.PropertyToID("_MainTex_UV");
 
         int sliceCount = 1023;
@@ -222,14 +222,14 @@ public class SpriteSheetRenderer_Basic : ComponentSystem {
 
             materialPropertyBlock.SetVectorArray(shaderPropertyId, uvInstancedArray);
 
-            Graphics.DrawMeshInstanced(
+            /*Graphics.DrawMeshInstanced(
                 quadMesh,
                 0,
                 material,
                 matrixInstancedArray,
                 sliceSize,
                 materialPropertyBlock
-            );
+            );*/
         }
 
         matrixArray.Dispose();

@@ -50,7 +50,7 @@ public class SpriteSheetRenderer_Old : ComponentSystem {
         Vector4[] uv = new Vector4[1];
         Camera camera = Camera.main;
         Mesh quadMesh = GameController.Instance.Mesh;
-        Material material = GameController.Instance.Material;
+//        Material material = GameController.Instance.EnemyMaterials;
         int shaderPropertyId = Shader.PropertyToID("_MainTex_UV");
 
         int sliceCount = 1023;
@@ -67,13 +67,13 @@ public class SpriteSheetRenderer_Old : ComponentSystem {
 
             materialPropertyBlock.SetVectorArray(shaderPropertyId, uvList);
 
-            Graphics.DrawMeshInstanced(
+            /*Graphics.DrawMeshInstanced(
                 quadMesh,
                 0,
                 material,
                 matrixList,
                 materialPropertyBlock
-            );
+            );*/
         }
 
         animationDataArray.Dispose();

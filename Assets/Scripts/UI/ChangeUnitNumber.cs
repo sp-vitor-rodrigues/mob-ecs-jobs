@@ -4,26 +4,46 @@ using UnityEngine.SceneManagement;
 
 public class ChangeUnitNumber : MonoBehaviour
 {
-    public TMP_InputField InputField;
+    public TMP_InputField DefendersInputField;
+    public TMP_InputField AttackerInputField;
 
     private void Awake()
     {
-        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfEnemies", 1);
+        var storedNumberOfDefenders = PlayerPrefs.GetInt("NumberOfDefenders", 1);
 
-        PlayerPrefs.SetInt("NumberOfEnemies", storedNumberOfEnemies);
+        PlayerPrefs.SetInt("NumberOfDefenders", storedNumberOfDefenders);
 
-        InputField.text = storedNumberOfEnemies.ToString();
+        DefendersInputField.text = storedNumberOfDefenders.ToString();
+
+        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfAttackers", 1);
+
+        PlayerPrefs.SetInt("NumberOfAttackers", storedNumberOfEnemies);
+
+        AttackerInputField.text = storedNumberOfEnemies.ToString();
     }
 
-    public void ApplyNumberOfEnemies()
+    public void ApplyNumberOfDefenders()
     {
-        var inputResult = int.Parse(InputField.text);
+        var inputResult = int.Parse(DefendersInputField.text);
         if (inputResult > 10000)
         {
             return;
         }
 
-        PlayerPrefs.SetInt("NumberOfEnemies", inputResult);
+        PlayerPrefs.SetInt("NumberOfDefenders", inputResult);
+
+        SceneManager.LoadScene("EmptyScene");
+    }
+
+    public void ApplyNumberOfEnemies()
+    {
+        var inputResult = int.Parse(AttackerInputField.text);
+        if (inputResult > 10000)
+        {
+            return;
+        }
+
+        PlayerPrefs.SetInt("NumberOfAttackers", inputResult);
 
         SceneManager.LoadScene("EmptyScene");
     }
