@@ -163,6 +163,8 @@ public class GameController : MonoBehaviour
     EntityManager _entityManager;
 
     EntityArchetype _meleeArchetype;
+    EntityArchetype _rangedArchetype;
+    EntityArchetype _aoeArchetype;
 
     public bool ReadyToRun = false;
 
@@ -182,7 +184,27 @@ public class GameController : MonoBehaviour
             typeof(SpriteSheetAnimation_Data),
             typeof(MoveTo),
             typeof(QuadrantEntity),
-            typeof(Unit)
+            typeof(MeleeUnit),
+            typeof(Unit),
+            typeof(RangeData)
+        );
+        _rangedArchetype = _entityManager.CreateArchetype(
+            typeof(Translation),
+            typeof(SpriteSheetAnimation_Data),
+            typeof(MoveTo),
+            typeof(QuadrantEntity),
+            typeof(RangedUnit),
+            typeof(Unit),
+            typeof(RangeData)
+        );
+        _aoeArchetype = _entityManager.CreateArchetype(
+            typeof(Translation),
+            typeof(SpriteSheetAnimation_Data),
+            typeof(MoveTo),
+            typeof(QuadrantEntity),
+            typeof(AOEUnit),
+            typeof(Unit),
+            typeof(RangeData)
         );
 
         CreateUnits(FactionsData);
@@ -265,7 +287,6 @@ public class GameController : MonoBehaviour
                     frameTimer = UnityEngine.Random.Range(0f, 1f),
                     frameTimerMax = .1f,
                     inverted = animationData.Inverted,
-                    pixelsPerFrame = animationData.PixelsPerFrame,
                     yIndex = animationData.YIndex
                 }
             );
@@ -276,6 +297,10 @@ public class GameController : MonoBehaviour
             _entityManager.SetComponentData(entity, new QuadrantEntity
             {
                 typeEnum = faction == global::SlicePositionData.FactionType.Defenders ? QuadrantEntity.TypeEnum.Defender : QuadrantEntity.TypeEnum.Attacker
+            });
+            _entityManager.SetComponentData(entity, new RangeData
+            {
+                Range = charData.AttackDistance
             });
             AddPositionData(entity);
         }

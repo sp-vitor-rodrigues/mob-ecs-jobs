@@ -26,12 +26,10 @@ public struct SpriteSheetAnimation_Data : IComponentData {
 
     public bool inverted;
     public int yIndex;
-    public int pixelsPerFrame;
 
     public Vector4 uv;
     public Matrix4x4 matrix;
 }
-
 
 public class SpriteSheetAnimation_Animate : JobComponentSystem {
 

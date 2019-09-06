@@ -19,7 +19,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
-//using CodeMonkey.Utils;
 
 
 public struct QuadrantEntity : IComponentData {
@@ -117,10 +116,19 @@ public class QuadrantSystem : ComponentSystem {
 }
 
 public struct Unit : IComponentData { }
+public struct MeleeUnit : IComponentData { }
+public struct RangedUnit : IComponentData { }
+public struct AOEUnit : IComponentData { }
+
 public struct Target : IComponentData { }
 
 public struct HasTarget : IComponentData {
     public Entity targetEntity;
+}
+
+public struct RangeData : IComponentData
+{
+    public float Range;
 }
 
 [DisableAutoCreation]

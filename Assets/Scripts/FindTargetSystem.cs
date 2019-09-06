@@ -43,7 +43,7 @@ public class FindTargetJobSystem : JobComponentSystem {
         }
     }
 
-    [RequireComponentTag(typeof(Unit))]
+    [RequireComponentTag(typeof(MeleeUnit))]
     [ExcludeComponent(typeof(HasTarget))]
     [BurstCompile]
     // Find Closest Target
@@ -98,36 +98,36 @@ public class FindTargetJobSystem : JobComponentSystem {
     [RequireComponentTag(typeof(Unit))]
     [ExcludeComponent(typeof(HasTarget))]
     [BurstCompile]
-    private struct FindTargetQuadrantSystemJob : IJobForEachWithEntity<Translation, QuadrantEntity> {
+    private struct FindTargetQuadrantSystemJob : IJobForEachWithEntity<Translation, QuadrantEntity, RangeData> {
 
         [ReadOnly] public NativeMultiHashMap<int, QuadrantData> quadrantMultiHashMap;
         public NativeArray<Entity> closestTargetEntityArray;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref QuadrantEntity quadrantEntity) {
+        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref QuadrantEntity quadrantEntity, ref RangeData rangeData) {
             float3 unitPosition = translation.Value;
             Entity closestTargetEntity = Entity.Null;
             float closestTargetDistance = float.MaxValue;
             int hashMapKey = QuadrantSystem.GetPositionHashMapKey(translation.Value);
 
-            FindTarget(hashMapKey, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey + 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey - 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey + 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey - 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey + 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
-            FindTarget(hashMapKey - 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance);
+            FindTarget(hashMapKey, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey + 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey - 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey + 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey - 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey + 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey - 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
 
             closestTargetEntityArray[index] = closestTargetEntity;
         }
 
-        private void FindTarget(int hashMapKey, float3 unitPosition, QuadrantEntity quadrantEntity, ref Entity closestTargetEntity, ref float closestTargetDistance) {
+        private void FindTarget(int hashMapKey, float3 unitPosition, QuadrantEntity quadrantEntity, ref Entity closestTargetEntity, ref float closestTargetDistance, ref RangeData rangeData) {
             QuadrantData quadrantData;
             NativeMultiHashMapIterator<int> nativeMultiHashMapIterator;
             if (quadrantMultiHashMap.TryGetFirstValue(hashMapKey, out quadrantData, out nativeMultiHashMapIterator)) {
                 do {
-                    if (quadrantEntity.typeEnum != quadrantData.quadrantEntity.typeEnum) {
+                    if (quadrantEntity.typeEnum != quadrantData.quadrantEntity.typeEnum && math.distancesq(unitPosition, quadrantData.position) < rangeData.Range) {
                         if (closestTargetEntity == Entity.Null) {
                             // No target
                             closestTargetEntity = quadrantData.entity;
@@ -159,7 +159,7 @@ public class FindTargetJobSystem : JobComponentSystem {
 
         bool useQuadrantSystem = GameController.Instance.UseQuadrantSystem;
         if (useQuadrantSystem) {
-            EntityQuery unitQuery = GetEntityQuery(typeof(Unit), ComponentType.Exclude<HasTarget>());
+            EntityQuery unitQuery = GetEntityQuery(typeof(MeleeUnit), ComponentType.Exclude<HasTarget>());
             NativeArray<Entity> closestTargetEntityArray = new NativeArray<Entity>(unitQuery.CalculateEntityCount(), Allocator.TempJob);
 
             FindTargetQuadrantSystemJob findTargetQuadrantSystemJob = new FindTargetQuadrantSystemJob {
@@ -188,7 +188,7 @@ public class FindTargetJobSystem : JobComponentSystem {
             };
             JobHandle jobHandle = fillArrayEntityWithPositionJob.Schedule(this, inputDeps);
             
-            EntityQuery unitQuery = GetEntityQuery(typeof(Unit), ComponentType.Exclude<HasTarget>());
+            EntityQuery unitQuery = GetEntityQuery(typeof(MeleeUnit), ComponentType.Exclude<HasTarget>());
             NativeArray<Entity> closestTargetEntityArray = new NativeArray<Entity>(unitQuery.CalculateEntityCount(), Allocator.TempJob);
 
             // Find Closest Target
