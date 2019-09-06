@@ -115,24 +115,6 @@ public class CharacterTypeData
     public CharactersType CharacterType;
     public int SpawnChance;
     public AnimationData[] Animations;
-
-    /*public void AddPositionData(PositionData positionData)
-    {
-        SlicePositionData[positionData.RenderSlice].Add(positionData);
-    }
-
-    public void RemovePositionData(PositionData positionData)
-    {
-        SlicePositionData[positionData.RenderSlice].Remove(positionData);
-    }
-
-    public void Clear()
-    {
-        for (int i = 0; i < POSITION_SLICES; i++)
-        {
-            SlicePositionData[i].Clear();
-        }
-    }*/
 }
 
 [Serializable]
@@ -140,33 +122,6 @@ public class FactionData
 {
     public SlicePositionData.FactionType FactionType;
     public CharacterTypeData[] CharactersData;
-
-    /*public FactionData(int numOfCharacters, Material material, Mesh mesh)
-    {
-        CharacterData = new CharacterTypeData[numOfCharacters];
-        for (int i = 0; i < numOfCharacters; i++)
-        {
-            CharacterData[i] = new CharacterTypeData(material, mesh);
-        }
-    }
-
-    public void AddPositionData(PositionData positionData, int characterType)
-    {
-        CharacterData[characterType].AddPositionData(positionData);
-    }
-
-    public void RemovePositionData(PositionData positionData, int characterType)
-    {
-        CharacterData[characterType].RemovePositionData(positionData);
-    }
-
-    public void Clear()
-    {
-        for (int i = 0; i < CharacterData.Length; i++)
-        {
-            CharacterData[i].Clear();
-        }
-    }*/
 }
 
 public struct RenderData
@@ -181,14 +136,6 @@ public struct MoveTo : IComponentData {
     public float3 Position;
     public float MoveSpeed;
 }
-/*
-[Serializable]
-public class ViewData
-{
-    public SlicePositionData.FactionType FactionType;
-    public bool Inverted;
-    public int SpawnChance;
-}*/
 
 public class GameController : MonoBehaviour
 {
@@ -196,8 +143,6 @@ public class GameController : MonoBehaviour
 
     public Material Material;
     public Mesh Mesh;
-//    public ViewData[] PlayerCharactersViewData;
-//    public ViewData[] EnemyCharactersViewData;
     public Camera MainCamera;
 
     public SlicePositionData[] SlicePositionData = new SlicePositionData[POSITION_SLICES];
@@ -227,67 +172,55 @@ public class GameController : MonoBehaviour
 
         _entityManager = World.Active.EntityManager;
 
-        /*FactionsData[0] = new FactionData(PlayerCharactersViewData.Length, PlayerCharactersViewData[0].Material, PlayerCharactersViewData[0].Mesh);
-        FactionsData[1] = new FactionData(EnemyCharactersViewData.Length, EnemyCharactersViewData[0].Material, EnemyCharactersViewData[0].Mesh);*/
-
         _meleeArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
             typeof(SpriteSheetAnimation_Data),
             typeof(MoveTo)
         );
 
-        /*StartCoroutine(CreateDefenders(PlayerCharactersViewData));
-        StartCoroutine(CreateAttackers(EnemyCharactersViewData));*/
+        CreateUnits(FactionsData);
 
         ReadyToRun = true;
     }
 
-    /*IEnumerator CreateDefenders(ViewData[] viewsData)
+    void CreateUnits(FactionData[] factionsData)
     {
-        var storedNumberOfDefenders = PlayerPrefs.GetInt("NumberOfDefenders", 1);
-
-        while (_totalUnits < storedNumberOfDefenders)
+        for (int i = 0; i < factionsData.Length; i++)
         {
-            var unitsToSpawn = (storedNumberOfDefenders - _totalUnits) < _amountOfUnitsPerSpawn
-                ? storedNumberOfDefenders - _totalUnits
+            StartCoroutine(CreateUnits(factionsData[i]));
+        }
+    }
+
+    IEnumerator CreateUnits(FactionData factionData)
+    {
+        var storedNumberOfUnits = PlayerPrefs.GetInt(factionData.FactionType == global::SlicePositionData.FactionType.Defenders ? "NumberOfDefenders" : "NumberOfAttackers", 1);
+
+        var totalUnits = 0;
+        while (totalUnits < storedNumberOfUnits)
+        {
+            var unitsToSpawn = (storedNumberOfUnits - totalUnits) < _amountOfUnitsPerSpawn
+                ? storedNumberOfUnits - totalUnits
                 : _amountOfUnitsPerSpawn;
 
-            var index = GetRandomView(viewsData);
-            CreateMeleeDefenders(unitsToSpawn, viewsData[index], index);
-            _totalUnits += unitsToSpawn;
+            var index = GetRandomUnit(factionData.CharactersData);
+            CreateUnits(unitsToSpawn, factionData.FactionType, factionData.CharactersData[index].Animations);
+
+            totalUnits += unitsToSpawn;
 
             yield return new WaitForSeconds(_timeBetweenSpawns);
         }
-    }*/
+    }
 
-    /*IEnumerator CreateAttackers(ViewData[] viewsData)
-    {
-        var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfAttackers", 1);
-
-        while (_totalUnits < storedNumberOfEnemies)
-        {
-            var unitsToSpawn = (storedNumberOfEnemies - _totalUnits) < _amountOfUnitsPerSpawn
-                ? storedNumberOfEnemies - _totalUnits
-                : _amountOfUnitsPerSpawn;
-
-            var index = GetRandomView(viewsData);
-            CreateMeleeAttackers(unitsToSpawn, viewsData[index], index);
-            _totalUnits += unitsToSpawn;
-
-            yield return new WaitForSeconds(_timeBetweenSpawns);
-        }
-    }*/
-
-    /*int GetRandomView(ViewData[] viewsData)
+    int GetRandomUnit(CharacterTypeData[] charsData)
     {
         var chance = UnityEngine.Random.Range(1, 100);
 
         var accumulated = 0;
 
-        for (var i = 0; i < viewsData.Length; i++)
+        for (var i = 0; i < charsData.Length; i++)
         {
-            var viewData = viewsData[i];
-            accumulated += viewData.SpawnChance;
+            var charData = charsData[i];
+            accumulated += charData.SpawnChance;
             if (chance < accumulated)
             {
                 return i;
@@ -295,7 +228,48 @@ public class GameController : MonoBehaviour
         }
 
         return -1;
-    }*/
+    }
+
+    void CreateUnits(int unitsToSpawn, SlicePositionData.FactionType faction, AnimationData[] animData)
+    {
+        var entityArray = new NativeArray<Entity>(unitsToSpawn, Allocator.Temp);
+
+        var animationData = animData[(int) AnimationData.AnimationType.Walk];
+
+        _entityManager.CreateEntity(_meleeArchetype, entityArray);
+
+        foreach (Entity entity in entityArray)
+        {
+            var position = new float3(
+                faction == global::SlicePositionData.FactionType.Attackers ? UnityEngine.Random.Range(10f, 30f) : -10f,
+                UnityEngine.Random.Range(-5f, 5f), 0);
+            var targetPosition = new float3(-5.2f, position.y, 0);
+            _entityManager.SetComponentData(entity,
+                new Translation
+                {
+                    Value = position
+                }
+            );
+            _entityManager.SetComponentData(entity,
+                new SpriteSheetAnimation_Data
+                {
+                    currentFrame = UnityEngine.Random.Range(0, animationData.Frames),
+                    frameCount = animationData.Frames,
+                    frameTimer = UnityEngine.Random.Range(0f, 1f),
+                    frameTimerMax = .1f,
+                    inverted = animationData.Inverted,
+                    pixelsPerFrame = animationData.PixelsPerFrame,
+                    yIndex = animationData.YIndex
+                }
+            );
+            _entityManager.SetComponentData(entity, new MoveTo
+            {
+                Move = true, Position = targetPosition, MoveSpeed = 0.5f
+            });
+            AddPositionData(entity);
+        }
+        entityArray.Dispose();
+    }
 
     void InitializeSlices()
     {
@@ -303,9 +277,11 @@ public class GameController : MonoBehaviour
         float cameraSliceSize = MainCamera.orthographicSize * 2f / POSITION_SLICES;
 
         _slicesPositions[0] = cameraPosition.y + MainCamera.orthographicSize;
-        for (int i = 1; i < 20; i++)
+        SlicePositionData[0] = new SlicePositionData();
+        for (int i = 1; i < POSITION_SLICES; i++)
         {
             _slicesPositions[i] = _slicesPositions[0] - cameraSliceSize * i;
+            SlicePositionData[i] = new SlicePositionData();
         }
     }
 
@@ -322,7 +298,7 @@ public class GameController : MonoBehaviour
         return -1;
     }
 
-    /*void AddPositionData(Entity entity, SlicePositionData.FactionType factionType, int characterType)
+    void AddPositionData(Entity entity)
     {
         var translation = _entityManager.GetComponentData<Translation>(entity);
         var index = GetSliceIndex(translation.Value.y);
@@ -338,80 +314,10 @@ public class GameController : MonoBehaviour
                 Position = translation.Value,
                 RenderSlice = index
             };
-            FactionsData[(int)factionType].AddPositionData(positionData, characterType);
+            SlicePositionData[index].Add(positionData);
         }
-    }*/
-
-    /*void CreateMeleeAttackers(int amount, ViewData viewData, int index)
-    {
-        var entityArray = new NativeArray<Entity>(amount, Allocator.Temp);
-
-        _entityManager.CreateEntity(_meleeArchetype, entityArray);
-
-        foreach (Entity entity in entityArray)
-        {
-            var position = new float3(UnityEngine.Random.Range(10f, 30f), UnityEngine.Random.Range(-5f, 5f), 0);
-            var targetPosition = new float3(-5.2f, position.y, 0);
-            _entityManager.SetComponentData(entity,
-                new Translation
-                {
-                    Value = position
-                }
-            );
-            _entityManager.SetComponentData(entity,
-                new SpriteSheetAnimation_Data
-                {
-                    currentFrame = UnityEngine.Random.Range(0, viewData.Frames),
-                    frameCount = viewData.Frames,
-                    frameTimer = UnityEngine.Random.Range(0f, 1f),
-                    frameTimerMax = .1f,
-                    inverted = viewData.Inverted,
-                }
-            );
-            _entityManager.SetComponentData(entity, new MoveTo
-            {
-                Move = true, Position = targetPosition, MoveSpeed = 0.5f
-            });
-            AddPositionData(entity, viewData.FactionType, index);
-        }
-        entityArray.Dispose();
     }
 
-    void CreateMeleeDefenders(int amount, ViewData viewData, int index)
-    {
-        var entityArray = new NativeArray<Entity>(amount, Allocator.Temp);
-
-        _entityManager.CreateEntity(_meleeArchetype, entityArray);
-
-        foreach (Entity entity in entityArray)
-        {
-            var position = new float3(-10f, UnityEngine.Random.Range(-5f, 5f), 0);
-            var targetPosition = new float3(-5.2f, position.y, 0);
-            _entityManager.SetComponentData(entity,
-                new Translation
-                {
-                    Value = position
-                }
-            );
-            _entityManager.SetComponentData(entity,
-                new SpriteSheetAnimation_Data
-                {
-                    currentFrame = UnityEngine.Random.Range(0, viewData.Frames),
-                    frameCount = viewData.Frames,
-                    frameTimer = UnityEngine.Random.Range(0f, 1f),
-                    frameTimerMax = .1f,
-                    inverted = viewData.Inverted,
-                }
-            );
-            _entityManager.SetComponentData(entity, new MoveTo
-            {
-                Move = true, Position = targetPosition, MoveSpeed = 0.5f
-            });
-            AddPositionData(entity, viewData.FactionType, index);
-        }
-        entityArray.Dispose();
-    }*/
-    
     void OnDestroy()
     {
         DestroyEntities();
@@ -424,6 +330,10 @@ public class GameController : MonoBehaviour
             _entityManager?.DestroyEntity(_entityManager.GetAllEntities());
         }
 
+        for (int i = 0; i < POSITION_SLICES; i++)
+        {
+            SlicePositionData[i].Clear();
+        }
         /*for (int i = 0; i < FactionsData.Length; i++)
         {
             FactionsData[i].Clear();

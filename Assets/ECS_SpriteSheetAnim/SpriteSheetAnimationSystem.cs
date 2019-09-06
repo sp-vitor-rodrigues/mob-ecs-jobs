@@ -25,6 +25,8 @@ public struct SpriteSheetAnimation_Data : IComponentData {
     public float frameTimerMax;
 
     public bool inverted;
+    public int yIndex;
+    public int pixelsPerFrame;
 
     public Vector4 uv;
     public Matrix4x4 matrix;
@@ -57,9 +59,9 @@ public class SpriteSheetAnimation_Animate : JobComponentSystem {
                 }
 
                 float uvWidth = 1f / spriteSheetAnimationData.frameCount;
-                float uvHeight = 1f;
+                float uvHeight = 1f / 14f;
                 float uvOffsetX = uvWidth * spriteSheetAnimationData.currentFrame;
-                float uvOffsetY = 0f;
+                float uvOffsetY = 1f - (uvHeight * (spriteSheetAnimationData.yIndex + 1f));
                 spriteSheetAnimationData.uv = new Vector4(uvWidth, uvHeight, uvOffsetX, uvOffsetY);
 
                 float3 position = translation.Value;

@@ -1899,7 +1899,7 @@ MonoBehaviour:
   - FactionType: 0
     CharactersData:
     - CharacterType: 2
-      SpawnChance: 60
+      SpawnChance: 50
       Animations:
       - AnimType: 0
         YIndex: 4
@@ -1935,7 +1935,7 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 4
-      SpawnChance: 10
+      SpawnChance: 20
       Animations:
       - AnimType: 0
         YIndex: 10
