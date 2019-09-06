@@ -13,10 +13,16 @@ public struct PositionData : System.IEquatable<PositionData>
     public Matrix4x4 Matrix;
     public Vector4 UV;
     public int RenderSlice;
+    public int SheetYIndex;
 
     public bool Equals(PositionData other)
     {
-        return Entity.Equals(other.Entity) && Position.Equals(other.Position) && Matrix.Equals(other.Matrix) && UV.Equals(other.UV) && RenderSlice == other.RenderSlice;
+        return Entity.Equals(other.Entity) &&
+               Position.Equals(other.Position) &&
+               Matrix.Equals(other.Matrix) &&
+               UV.Equals(other.UV) &&
+               RenderSlice == other.RenderSlice &&
+               SheetYIndex == other.SheetYIndex;
     }
 
     public override bool Equals(object obj)
@@ -33,9 +39,28 @@ public struct PositionData : System.IEquatable<PositionData>
             hashCode = (hashCode * 397) ^ Matrix.GetHashCode();
             hashCode = (hashCode * 397) ^ UV.GetHashCode();
             hashCode = (hashCode * 397) ^ RenderSlice;
+            hashCode = (hashCode * 397) ^ SheetYIndex;
             return hashCode;
         }
     }
+}
+
+[Serializable]
+public class AnimationData
+{
+    public enum AnimationType
+    {
+        Walk,
+        Attack,
+        Idle,
+        Cast
+    }
+
+    public AnimationType AnimType;
+    public int YIndex;
+    public int Frames;
+    public int PixelsPerFrame;
+    public bool Inverted;
 }
 
 public class SlicePositionData
@@ -73,27 +98,25 @@ public class SlicePositionData
     }
 }
 
+[Serializable]
 public class CharacterTypeData
 {
     const int POSITION_SLICES = 20;
 
-    public SlicePositionData[] SlicePositionData = new SlicePositionData[POSITION_SLICES];
-
-    public readonly Material Material;
-    public readonly Mesh Mesh;
-
-    public CharacterTypeData(Material material, Mesh mesh)
+    public enum CharactersType
     {
-        Material = material;
-        Mesh = mesh;
-        for (int i = 0; i < POSITION_SLICES; i++)
-        {
-            SlicePositionData[i] = new SlicePositionData();
-        }
-
+        Ogre,
+        Orc,
+        Knight,
+        Ranger,
+        Wizard
     }
 
-    public void AddPositionData(PositionData positionData)
+    public CharactersType CharacterType;
+    public int SpawnChance;
+    public AnimationData[] Animations;
+
+    /*public void AddPositionData(PositionData positionData)
     {
         SlicePositionData[positionData.RenderSlice].Add(positionData);
     }
@@ -109,14 +132,16 @@ public class CharacterTypeData
         {
             SlicePositionData[i].Clear();
         }
-    }
+    }*/
 }
 
+[Serializable]
 public class FactionData
 {
-    public CharacterTypeData[] CharacterData;
+    public SlicePositionData.FactionType FactionType;
+    public CharacterTypeData[] CharactersData;
 
-    public FactionData(int numOfCharacters, Material material, Mesh mesh)
+    /*public FactionData(int numOfCharacters, Material material, Mesh mesh)
     {
         CharacterData = new CharacterTypeData[numOfCharacters];
         for (int i = 0; i < numOfCharacters; i++)
@@ -141,7 +166,7 @@ public class FactionData
         {
             CharacterData[i].Clear();
         }
-    }
+    }*/
 }
 
 public struct RenderData
@@ -156,27 +181,26 @@ public struct MoveTo : IComponentData {
     public float3 Position;
     public float MoveSpeed;
 }
-
+/*
 [Serializable]
 public class ViewData
 {
     public SlicePositionData.FactionType FactionType;
-    public Material Material;
-    public Mesh Mesh;
     public bool Inverted;
     public int SpawnChance;
-    public int Frames;
-}
+}*/
 
 public class GameController : MonoBehaviour
 {
     const int POSITION_SLICES = 20;
 
+    public Material Material;
     public Mesh Mesh;
-    public ViewData[] PlayerCharactersViewData;
-    public ViewData[] EnemyCharactersViewData;
+//    public ViewData[] PlayerCharactersViewData;
+//    public ViewData[] EnemyCharactersViewData;
     public Camera MainCamera;
-    public EntityArchetype Archetype;
+
+    public SlicePositionData[] SlicePositionData = new SlicePositionData[POSITION_SLICES];
 
     static GameController _instance;
 
@@ -203,8 +227,8 @@ public class GameController : MonoBehaviour
 
         _entityManager = World.Active.EntityManager;
 
-        FactionsData[0] = new FactionData(PlayerCharactersViewData.Length, PlayerCharactersViewData[0].Material, PlayerCharactersViewData[0].Mesh);
-        FactionsData[1] = new FactionData(EnemyCharactersViewData.Length, EnemyCharactersViewData[0].Material, EnemyCharactersViewData[0].Mesh);
+        /*FactionsData[0] = new FactionData(PlayerCharactersViewData.Length, PlayerCharactersViewData[0].Material, PlayerCharactersViewData[0].Mesh);
+        FactionsData[1] = new FactionData(EnemyCharactersViewData.Length, EnemyCharactersViewData[0].Material, EnemyCharactersViewData[0].Mesh);*/
 
         _meleeArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
@@ -212,13 +236,13 @@ public class GameController : MonoBehaviour
             typeof(MoveTo)
         );
 
-        StartCoroutine(CreateDefenders(PlayerCharactersViewData));
-        StartCoroutine(CreateAttackers(EnemyCharactersViewData));
+        /*StartCoroutine(CreateDefenders(PlayerCharactersViewData));
+        StartCoroutine(CreateAttackers(EnemyCharactersViewData));*/
 
         ReadyToRun = true;
     }
 
-    IEnumerator CreateDefenders(ViewData[] viewsData)
+    /*IEnumerator CreateDefenders(ViewData[] viewsData)
     {
         var storedNumberOfDefenders = PlayerPrefs.GetInt("NumberOfDefenders", 1);
 
@@ -234,9 +258,9 @@ public class GameController : MonoBehaviour
 
             yield return new WaitForSeconds(_timeBetweenSpawns);
         }
-    }
+    }*/
 
-    IEnumerator CreateAttackers(ViewData[] viewsData)
+    /*IEnumerator CreateAttackers(ViewData[] viewsData)
     {
         var storedNumberOfEnemies = PlayerPrefs.GetInt("NumberOfAttackers", 1);
 
@@ -252,9 +276,9 @@ public class GameController : MonoBehaviour
 
             yield return new WaitForSeconds(_timeBetweenSpawns);
         }
-    }
+    }*/
 
-    int GetRandomView(ViewData[] viewsData)
+    /*int GetRandomView(ViewData[] viewsData)
     {
         var chance = UnityEngine.Random.Range(1, 100);
 
@@ -271,7 +295,7 @@ public class GameController : MonoBehaviour
         }
 
         return -1;
-    }
+    }*/
 
     void InitializeSlices()
     {
@@ -298,7 +322,7 @@ public class GameController : MonoBehaviour
         return -1;
     }
 
-    void AddPositionData(Entity entity, SlicePositionData.FactionType factionType, int characterType)
+    /*void AddPositionData(Entity entity, SlicePositionData.FactionType factionType, int characterType)
     {
         var translation = _entityManager.GetComponentData<Translation>(entity);
         var index = GetSliceIndex(translation.Value.y);
@@ -316,9 +340,9 @@ public class GameController : MonoBehaviour
             };
             FactionsData[(int)factionType].AddPositionData(positionData, characterType);
         }
-    }
+    }*/
 
-    void CreateMeleeAttackers(int amount, ViewData viewData, int index)
+    /*void CreateMeleeAttackers(int amount, ViewData viewData, int index)
     {
         var entityArray = new NativeArray<Entity>(amount, Allocator.Temp);
 
@@ -386,7 +410,7 @@ public class GameController : MonoBehaviour
             AddPositionData(entity, viewData.FactionType, index);
         }
         entityArray.Dispose();
-    }
+    }*/
     
     void OnDestroy()
     {
@@ -400,9 +424,9 @@ public class GameController : MonoBehaviour
             _entityManager?.DestroyEntity(_entityManager.GetAllEntities());
         }
 
-        for (int i = 0; i < FactionsData.Length; i++)
+        /*for (int i = 0; i < FactionsData.Length; i++)
         {
             FactionsData[i].Clear();
-        }
+        }*/
     }
 }

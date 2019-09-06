@@ -1864,28 +1864,99 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05900f3758a500b47867e3632949b4fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Material: {fileID: 2100000, guid: b6909b7054c04544494e3482e91b7f1f, type: 2}
   Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  PlayerCharactersViewData:
-  - FactionType: 0
-    Material: {fileID: 2100000, guid: 5334ba17abb3c7145bc0ba535e089875, type: 2}
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Inverted: 0
-    SpawnChance: 100
-    Frames: 8
-  EnemyCharactersViewData:
-  - FactionType: 1
-    Material: {fileID: 2100000, guid: e7dfc691f2c4f1a4ea5b2dcbeb62ea15, type: 2}
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Inverted: 1
-    SpawnChance: 50
-    Frames: 8
-  - FactionType: 1
-    Material: {fileID: 2100000, guid: 2ce1e904c9be0494d88a436952c9869e, type: 2}
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Inverted: 1
-    SpawnChance: 50
-    Frames: 8
   MainCamera: {fileID: 749287743}
+  FactionsData:
+  - FactionType: 1
+    CharactersData:
+    - CharacterType: 0
+      SpawnChance: 20
+      Animations:
+      - AnimType: 0
+        YIndex: 0
+        Frames: 8
+        PixelsPerFrame: 32
+        Inverted: 1
+      - AnimType: 1
+        YIndex: 1
+        Frames: 6
+        PixelsPerFrame: 32
+        Inverted: 1
+    - CharacterType: 1
+      SpawnChance: 80
+      Animations:
+      - AnimType: 0
+        YIndex: 2
+        Frames: 8
+        PixelsPerFrame: 32
+        Inverted: 1
+      - AnimType: 1
+        YIndex: 3
+        Frames: 6
+        PixelsPerFrame: 32
+        Inverted: 1
+  - FactionType: 0
+    CharactersData:
+    - CharacterType: 2
+      SpawnChance: 60
+      Animations:
+      - AnimType: 0
+        YIndex: 4
+        Frames: 8
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 1
+        YIndex: 5
+        Frames: 7
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 2
+        YIndex: 6
+        Frames: 2
+        PixelsPerFrame: 32
+        Inverted: 0
+    - CharacterType: 3
+      SpawnChance: 30
+      Animations:
+      - AnimType: 0
+        YIndex: 7
+        Frames: 8
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 1
+        YIndex: 8
+        Frames: 7
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 2
+        YIndex: 9
+        Frames: 2
+        PixelsPerFrame: 32
+        Inverted: 0
+    - CharacterType: 4
+      SpawnChance: 10
+      Animations:
+      - AnimType: 0
+        YIndex: 10
+        Frames: 8
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 1
+        YIndex: 11
+        Frames: 7
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 3
+        YIndex: 12
+        Frames: 5
+        PixelsPerFrame: 32
+        Inverted: 0
+      - AnimType: 2
+        YIndex: 13
+        Frames: 2
+        PixelsPerFrame: 32
+        Inverted: 0
   ReadyToRun: 0
 --- !u!4 &2009490486
 Transform:
