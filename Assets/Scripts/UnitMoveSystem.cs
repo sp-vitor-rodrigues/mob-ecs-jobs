@@ -18,7 +18,7 @@ public class UnitMoveSystem : JobComponentSystem
         {
             if (moveTo.Move)
             {
-                if (math.distance(translation.Value, moveTo.Position) > 1f)
+                if (math.distance(translation.Value, moveTo.Position) > moveTo.Distance)
                 {
                     // Move to position
                     float3 moveDir = math.normalize(moveTo.Position - translation.Value);

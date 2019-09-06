@@ -113,6 +113,9 @@ public class CharacterTypeData
     }
 
     public CharactersType CharacterType;
+    public float AttackDistance = 0.15f;
+    public int Damage = 10;
+    public float MoveSpeed = 0.5f;
     public int SpawnChance;
     public AnimationData[] Animations;
 }
@@ -135,6 +138,7 @@ public struct MoveTo : IComponentData {
     public bool Move;
     public float3 Position;
     public float MoveSpeed;
+    public float Distance;
 }
 
 public class GameController : MonoBehaviour
@@ -150,6 +154,7 @@ public class GameController : MonoBehaviour
     static GameController _instance;
 
     public static GameController Instance => _instance;
+    public bool UseQuadrantSystem;
 
     public FactionData[] FactionsData = new FactionData[2];
 
@@ -161,8 +166,8 @@ public class GameController : MonoBehaviour
 
     public bool ReadyToRun = false;
 
-    int _timeBetweenSpawns = 1;
-    int _amountOfUnitsPerSpawn = 50;
+    float _timeBetweenSpawns = 0.2f;
+    int _amountOfUnitsPerSpawn = 10;
     int _totalUnits = 0;
 
     void Start()
@@ -175,7 +180,9 @@ public class GameController : MonoBehaviour
         _meleeArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
             typeof(SpriteSheetAnimation_Data),
-            typeof(MoveTo)
+            typeof(MoveTo),
+            typeof(QuadrantEntity),
+            typeof(Unit)
         );
 
         CreateUnits(FactionsData);
@@ -203,7 +210,7 @@ public class GameController : MonoBehaviour
                 : _amountOfUnitsPerSpawn;
 
             var index = GetRandomUnit(factionData.CharactersData);
-            CreateUnits(unitsToSpawn, factionData.FactionType, factionData.CharactersData[index].Animations);
+            CreateUnits(unitsToSpawn, factionData.FactionType, factionData.CharactersData[index]);
 
             totalUnits += unitsToSpawn;
 
@@ -230,11 +237,11 @@ public class GameController : MonoBehaviour
         return -1;
     }
 
-    void CreateUnits(int unitsToSpawn, SlicePositionData.FactionType faction, AnimationData[] animData)
+    void CreateUnits(int unitsToSpawn, SlicePositionData.FactionType faction, CharacterTypeData charData)
     {
         var entityArray = new NativeArray<Entity>(unitsToSpawn, Allocator.Temp);
 
-        var animationData = animData[(int) AnimationData.AnimationType.Walk];
+        var animationData = charData.Animations[(int) AnimationData.AnimationType.Walk];
 
         _entityManager.CreateEntity(_meleeArchetype, entityArray);
 
@@ -264,7 +271,11 @@ public class GameController : MonoBehaviour
             );
             _entityManager.SetComponentData(entity, new MoveTo
             {
-                Move = true, Position = targetPosition, MoveSpeed = 0.5f
+                Move = true, Position = targetPosition, MoveSpeed = charData.MoveSpeed, Distance = charData.AttackDistance
+            });
+            _entityManager.SetComponentData(entity, new QuadrantEntity
+            {
+                typeEnum = faction == global::SlicePositionData.FactionType.Defenders ? QuadrantEntity.TypeEnum.Defender : QuadrantEntity.TypeEnum.Attacker
             });
             AddPositionData(entity);
         }

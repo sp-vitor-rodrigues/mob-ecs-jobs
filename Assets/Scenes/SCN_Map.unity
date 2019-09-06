@@ -1867,10 +1867,14 @@ MonoBehaviour:
   Material: {fileID: 2100000, guid: b6909b7054c04544494e3482e91b7f1f, type: 2}
   Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   MainCamera: {fileID: 749287743}
+  UseQuadrantSystem: 1
   FactionsData:
   - FactionType: 1
     CharactersData:
     - CharacterType: 0
+      AttackDistance: 0.15
+      Damage: 10
+      MoveSpeed: 0.4
       SpawnChance: 20
       Animations:
       - AnimType: 0
@@ -1884,6 +1888,9 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 1
     - CharacterType: 1
+      AttackDistance: 0.15
+      Damage: 10
+      MoveSpeed: 0.5
       SpawnChance: 80
       Animations:
       - AnimType: 0
@@ -1899,6 +1906,9 @@ MonoBehaviour:
   - FactionType: 0
     CharactersData:
     - CharacterType: 2
+      AttackDistance: 0.15
+      Damage: 10
+      MoveSpeed: 0.5
       SpawnChance: 50
       Animations:
       - AnimType: 0
@@ -1917,6 +1927,9 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 3
+      AttackDistance: 1
+      Damage: 10
+      MoveSpeed: 0.5
       SpawnChance: 30
       Animations:
       - AnimType: 0
@@ -1935,6 +1948,9 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 4
+      AttackDistance: 2
+      Damage: 10
+      MoveSpeed: 0.2
       SpawnChance: 20
       Animations:
       - AnimType: 0
