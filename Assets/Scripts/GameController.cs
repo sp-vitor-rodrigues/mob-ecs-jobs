@@ -377,7 +377,7 @@ public class GameController : MonoBehaviour
         return -1;
     }
 
-    void AddPositionData(Entity entity)
+    public void AddPositionData(Entity entity)
     {
         var translation = _entityManager.GetComponentData<Translation>(entity);
         var index = GetSliceIndex(translation.Value.y);
@@ -416,6 +416,28 @@ public class GameController : MonoBehaviour
 
 
             }
+        }
+    }
+
+    public void EntityReachedTarget(Entity entity)
+    {
+        if (_entityManager.HasComponent(entity, typeof(Projectile)))
+        {
+            var projectile = _entityManager.GetComponentData<Projectile>(entity);
+            var health = _entityManager.GetComponentData<HealthData>(projectile.Target);
+
+            if (!health.IsDead)
+            {
+                health.CurrentHealth -= projectile.Damage;
+            }
+
+            if (!health.IsDead)
+            {
+                _entityManager.RemoveComponent(entity, typeof(DoAttack));
+                _entityManager.RemoveComponent(entity, typeof(HasTarget));
+                _entityManager.AddComponent(projectile.Target, typeof(IsDead));
+            }
+
         }
     }
 

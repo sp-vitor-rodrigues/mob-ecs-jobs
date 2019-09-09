@@ -1933,7 +1933,7 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 3
-      AttackDistance: 4
+      AttackDistance: 6
       Damage: 2
       AttackTime: 2
       MoveSpeed: 0.5
@@ -1956,7 +1956,7 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 4
-      AttackDistance: 6
+      AttackDistance: 8
       Damage: 10
       AttackTime: 1
       MoveSpeed: 0.2

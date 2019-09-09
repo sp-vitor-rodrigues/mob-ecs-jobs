@@ -9,9 +9,25 @@ using UnityEngine;
 // Unit go to Move Position
 public class UnitMoveSystem : JobComponentSystem
 {
-    [BurstCompile]
-    private struct Job : IJobForEachWithEntity<MoveTo, Translation> {
+    NativeQueue<Entity> _completedMovement;
 
+    protected override void OnCreate()
+    {
+        base.OnCreate();
+        _completedMovement = new NativeQueue<Entity>(Allocator.Persistent);
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        _completedMovement.Dispose();
+    }
+
+    [BurstCompile]
+    private struct Job : IJobForEachWithEntity<MoveTo, Translation>
+    {
+
+        public NativeQueue<Entity>.ParallelWriter Queue;
         public float deltaTime;
 
         public void Execute(Entity entity, int index, [ReadOnly] ref MoveTo moveTo, ref Translation translation)
@@ -26,6 +42,8 @@ public class UnitMoveSystem : JobComponentSystem
                 }
                 else
                 {
+                    Queue.Enqueue(entity);
+                    moveTo.Move = false;
                     // Already there
                 }
             }
@@ -37,9 +55,15 @@ public class UnitMoveSystem : JobComponentSystem
     {
         Job job = new Job
         {
+            Queue = _completedMovement.AsParallelWriter(),
             deltaTime = Time.deltaTime,
         };
         return job.Schedule(this, inputDeps);
+
+        while (_completedMovement.Count > 0)
+        {
+            GameController.Instance.EntityReachedTarget(_completedMovement.Dequeue());
+        }
     }
 
 }
