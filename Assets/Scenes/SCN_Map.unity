@@ -1874,8 +1874,10 @@ MonoBehaviour:
     - CharacterType: 0
       AttackDistance: 0.15
       Damage: 10
+      AttackTime: 1
       MoveSpeed: 0.4
       SpawnChance: 20
+      Health: 100
       Animations:
       - AnimType: 0
         YIndex: 0
@@ -1890,8 +1892,10 @@ MonoBehaviour:
     - CharacterType: 1
       AttackDistance: 0.15
       Damage: 10
+      AttackTime: 1
       MoveSpeed: 0.5
       SpawnChance: 80
+      Health: 50
       Animations:
       - AnimType: 0
         YIndex: 2
@@ -1908,8 +1912,10 @@ MonoBehaviour:
     - CharacterType: 2
       AttackDistance: 0.15
       Damage: 10
+      AttackTime: 1
       MoveSpeed: 0.5
-      SpawnChance: 50
+      SpawnChance: 60
+      Health: 100
       Animations:
       - AnimType: 0
         YIndex: 4
@@ -1927,10 +1933,12 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 3
-      AttackDistance: 1
+      AttackDistance: 2
       Damage: 10
+      AttackTime: 1
       MoveSpeed: 0.5
       SpawnChance: 30
+      Health: 50
       Animations:
       - AnimType: 0
         YIndex: 7
@@ -1948,10 +1956,12 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 4
-      AttackDistance: 2
+      AttackDistance: 3
       Damage: 10
+      AttackTime: 1
       MoveSpeed: 0.2
-      SpawnChance: 20
+      SpawnChance: 10
+      Health: 30
       Animations:
       - AnimType: 0
         YIndex: 10

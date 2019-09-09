@@ -126,9 +126,21 @@ public struct HasTarget : IComponentData {
     public Entity targetEntity;
 }
 
-public struct RangeData : IComponentData
+public struct DoAttack : IComponentData {
+    public Entity TargetEntity;
+    public float AttackTime;
+    public float ElapsedTime;
+    public int Damage;
+}
+
+public struct IsDead : IComponentData {
+}
+
+public struct AttackData : IComponentData
 {
     public float Range;
+    public float Time;
+    public int Damage;
 }
 
 [DisableAutoCreation]

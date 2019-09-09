@@ -31,6 +31,7 @@ public struct SpriteSheetAnimation_Data : IComponentData {
     public Matrix4x4 matrix;
 }
 
+[UpdateAfter(typeof(AttackJobSystem))]
 public class SpriteSheetAnimation_Animate : JobComponentSystem {
 
     [BurstCompile]

@@ -115,8 +115,10 @@ public class CharacterTypeData
     public CharactersType CharacterType;
     public float AttackDistance = 0.15f;
     public int Damage = 10;
+    public float AttackTime = 1f;
     public float MoveSpeed = 0.5f;
     public int SpawnChance;
+    public int Health = 100;
     public AnimationData[] Animations;
 }
 
@@ -132,6 +134,16 @@ public struct RenderData
     public float3 position;
     public Matrix4x4 matrix;
     public Vector4 uv;
+}
+
+public struct HealthData : IComponentData
+{
+    public int MaxHealth;
+    public int CurrentHealth;
+    public bool IsDead
+    {
+        get { return CurrentHealth <= 0; }
+    }
 }
 
 public struct MoveTo : IComponentData {
@@ -186,7 +198,8 @@ public class GameController : MonoBehaviour
             typeof(QuadrantEntity),
             typeof(MeleeUnit),
             typeof(Unit),
-            typeof(RangeData)
+            typeof(HealthData),
+            typeof(AttackData)
         );
         _rangedArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
@@ -195,7 +208,8 @@ public class GameController : MonoBehaviour
             typeof(QuadrantEntity),
             typeof(RangedUnit),
             typeof(Unit),
-            typeof(RangeData)
+            typeof(HealthData),
+            typeof(AttackData)
         );
         _aoeArchetype = _entityManager.CreateArchetype(
             typeof(Translation),
@@ -204,7 +218,8 @@ public class GameController : MonoBehaviour
             typeof(QuadrantEntity),
             typeof(AOEUnit),
             typeof(Unit),
-            typeof(RangeData)
+            typeof(HealthData),
+            typeof(AttackData)
         );
 
         CreateUnits(FactionsData);
@@ -298,9 +313,16 @@ public class GameController : MonoBehaviour
             {
                 typeEnum = faction == global::SlicePositionData.FactionType.Defenders ? QuadrantEntity.TypeEnum.Defender : QuadrantEntity.TypeEnum.Attacker
             });
-            _entityManager.SetComponentData(entity, new RangeData
+            _entityManager.SetComponentData(entity, new AttackData
             {
-                Range = charData.AttackDistance
+                Range = charData.AttackDistance,
+                Damage = charData.Damage,
+                Time = charData.AttackTime
+            });
+            _entityManager.SetComponentData(entity, new HealthData
+            {
+                MaxHealth = charData.Health,
+                CurrentHealth = charData.Health
             });
             AddPositionData(entity);
         }
@@ -351,6 +373,28 @@ public class GameController : MonoBehaviour
                 RenderSlice = index
             };
             SlicePositionData[index].Add(positionData);
+        }
+    }
+
+    public void RemovePositionData(Entity entity)
+    {
+        var translation = _entityManager.GetComponentData<Translation>(entity);
+        var index = GetSliceIndex(translation.Value.y);
+        if (index < 0)
+        {
+            Debug.LogError("Proper slice index was not found!");
+        }
+        else
+        {
+            for (int i = 0; i < SlicePositionData[index].PositionsData.Length; i++)
+            {
+                if (SlicePositionData[index].PositionsData[i].Entity == entity)
+                {
+                    SlicePositionData[index].PositionsData.RemoveAt(i);
+                }
+
+
+            }
         }
     }
 

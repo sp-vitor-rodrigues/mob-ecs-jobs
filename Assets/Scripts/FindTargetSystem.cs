@@ -81,6 +81,7 @@ public class FindTargetJobSystem : JobComponentSystem {
 
     [RequireComponentTag(typeof(Unit))]
     [ExcludeComponent(typeof(HasTarget))]
+    [BurstCompile]
     // Add HasTarget Component to Entities that have a Closest Target
     private struct AddComponentJob : IJobForEachWithEntity<Translation> {
 
@@ -98,36 +99,36 @@ public class FindTargetJobSystem : JobComponentSystem {
     [RequireComponentTag(typeof(Unit))]
     [ExcludeComponent(typeof(HasTarget))]
     [BurstCompile]
-    private struct FindTargetQuadrantSystemJob : IJobForEachWithEntity<Translation, QuadrantEntity, RangeData> {
+    private struct FindTargetQuadrantSystemJob : IJobForEachWithEntity<Translation, QuadrantEntity, AttackData> {
 
         [ReadOnly] public NativeMultiHashMap<int, QuadrantData> quadrantMultiHashMap;
         public NativeArray<Entity> closestTargetEntityArray;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref QuadrantEntity quadrantEntity, ref RangeData rangeData) {
+        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref QuadrantEntity quadrantEntity, ref AttackData attackData) {
             float3 unitPosition = translation.Value;
             Entity closestTargetEntity = Entity.Null;
             float closestTargetDistance = float.MaxValue;
             int hashMapKey = QuadrantSystem.GetPositionHashMapKey(translation.Value);
 
-            FindTarget(hashMapKey, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey + 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey - 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey + 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey - 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey + 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
-            FindTarget(hashMapKey - 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref rangeData);
+            FindTarget(hashMapKey, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey + 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey - 1, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey + 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey - 1 + QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey + 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
+            FindTarget(hashMapKey - 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
 
             closestTargetEntityArray[index] = closestTargetEntity;
         }
 
-        private void FindTarget(int hashMapKey, float3 unitPosition, QuadrantEntity quadrantEntity, ref Entity closestTargetEntity, ref float closestTargetDistance, ref RangeData rangeData) {
+        private void FindTarget(int hashMapKey, float3 unitPosition, QuadrantEntity quadrantEntity, ref Entity closestTargetEntity, ref float closestTargetDistance, ref AttackData attackData) {
             QuadrantData quadrantData;
             NativeMultiHashMapIterator<int> nativeMultiHashMapIterator;
             if (quadrantMultiHashMap.TryGetFirstValue(hashMapKey, out quadrantData, out nativeMultiHashMapIterator)) {
                 do {
-                    if (quadrantEntity.typeEnum != quadrantData.quadrantEntity.typeEnum && math.distancesq(unitPosition, quadrantData.position) < rangeData.Range) {
+                    if (quadrantEntity.typeEnum != quadrantData.quadrantEntity.typeEnum && math.distancesq(unitPosition, quadrantData.position) < attackData.Range) {
                         if (closestTargetEntity == Entity.Null) {
                             // No target
                             closestTargetEntity = quadrantData.entity;
@@ -187,7 +188,7 @@ public class FindTargetJobSystem : JobComponentSystem {
                 targetArray = targetArray
             };
             JobHandle jobHandle = fillArrayEntityWithPositionJob.Schedule(this, inputDeps);
-            
+
             EntityQuery unitQuery = GetEntityQuery(typeof(MeleeUnit), ComponentType.Exclude<HasTarget>());
             NativeArray<Entity> closestTargetEntityArray = new NativeArray<Entity>(unitQuery.CalculateEntityCount(), Allocator.TempJob);
 
