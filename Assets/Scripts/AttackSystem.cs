@@ -41,6 +41,7 @@ public class AttackJobSystem : JobComponentSystem
         }
     }
 
+    [ExcludeComponent(typeof(IsDead))]
     [BurstCompile]
     private struct AttackEntityJob : IJobForEachWithEntity<DoAttack>
     {
@@ -61,7 +62,7 @@ public class AttackJobSystem : JobComponentSystem
                     if (!healthData.IsDead)
                     {
                         healthData.CurrentHealth -= doAttack.Damage;
-                        Debug.Log("Caused " + doAttack.Damage + " to " + doAttack.TargetEntity);
+//                        Debug.Log("Caused " + doAttack.Damage + " to " + doAttack.TargetEntity);
                     }
 
                     if (!healthData.IsDead)
@@ -135,7 +136,7 @@ public class AttackJobSystem : JobComponentSystem
     }
 }
 
-[UpdateBefore(typeof(AttackJobSystem))]
+[UpdateAfter(typeof(AttackJobSystem))]
 public class RemoveDeadSystem : ComponentSystem
 {
     EntityManager _entityManager;
@@ -154,7 +155,7 @@ public class RemoveDeadSystem : ComponentSystem
         for (int i = 0; i < entitiesToRemove.Length; i++)
         {
             var entity = entitiesToRemove[i];
-            Debug.Log("Removed dead " + entity);
+            //Debug.Log("Removed dead " + entity);
             //_entityManager.DestroyEntity(entity);
             GameController.Instance.RemovePositionData(entity);
         }

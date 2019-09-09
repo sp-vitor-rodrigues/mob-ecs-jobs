@@ -280,14 +280,34 @@ public class GameController : MonoBehaviour
 
         var animationData = charData.Animations[(int) AnimationData.AnimationType.Walk];
 
-        _entityManager.CreateEntity(_meleeArchetype, entityArray);
+        var movePosition = 0f;
+        switch (charData.CharacterType)
+        {
+            case CharacterTypeData.CharactersType.Knight:
+                _entityManager.CreateEntity(_meleeArchetype, entityArray);
+                movePosition = -5.15f;
+                break;
+            case CharacterTypeData.CharactersType.Orc:
+            case CharacterTypeData.CharactersType.Ogre:
+                _entityManager.CreateEntity(_meleeArchetype, entityArray);
+                movePosition = -5.05f;
+                break;
+            case CharacterTypeData.CharactersType.Ranger:
+                _entityManager.CreateEntity(_rangedArchetype, entityArray);
+                movePosition = -6f;
+                break;
+            case CharacterTypeData.CharactersType.Wizard:
+                _entityManager.CreateEntity(_aoeArchetype, entityArray);
+                movePosition = -7f;
+                break;
+        }
 
         foreach (Entity entity in entityArray)
         {
             var position = new float3(
                 faction == global::SlicePositionData.FactionType.Attackers ? UnityEngine.Random.Range(10f, 30f) : -10f,
                 UnityEngine.Random.Range(-5f, 5f), 0);
-            var targetPosition = new float3(-5.2f, position.y, 0);
+            var targetPosition = new float3(movePosition, position.y, 0);
             _entityManager.SetComponentData(entity,
                 new Translation
                 {
@@ -307,7 +327,7 @@ public class GameController : MonoBehaviour
             );
             _entityManager.SetComponentData(entity, new MoveTo
             {
-                Move = true, Position = targetPosition, MoveSpeed = charData.MoveSpeed, Distance = charData.AttackDistance
+                Move = true, Position = targetPosition, MoveSpeed = charData.MoveSpeed, Distance = 0.15f
             });
             _entityManager.SetComponentData(entity, new QuadrantEntity
             {
@@ -317,7 +337,8 @@ public class GameController : MonoBehaviour
             {
                 Range = charData.AttackDistance,
                 Damage = charData.Damage,
-                Time = charData.AttackTime
+                Time = charData.AttackTime,
+                CharacterType = charData.CharacterType
             });
             _entityManager.SetComponentData(entity, new HealthData
             {

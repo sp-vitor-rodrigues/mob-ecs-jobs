@@ -1933,9 +1933,9 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 3
-      AttackDistance: 2
-      Damage: 10
-      AttackTime: 1
+      AttackDistance: 4
+      Damage: 2
+      AttackTime: 2
       MoveSpeed: 0.5
       SpawnChance: 30
       Health: 50
@@ -1956,7 +1956,7 @@ MonoBehaviour:
         PixelsPerFrame: 32
         Inverted: 0
     - CharacterType: 4
-      AttackDistance: 3
+      AttackDistance: 6
       Damage: 10
       AttackTime: 1
       MoveSpeed: 0.2

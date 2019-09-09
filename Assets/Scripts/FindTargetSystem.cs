@@ -43,7 +43,7 @@ public class FindTargetJobSystem : JobComponentSystem {
         }
     }
 
-    [RequireComponentTag(typeof(MeleeUnit))]
+    [RequireComponentTag(typeof(Unit))]
     [ExcludeComponent(typeof(HasTarget))]
     [BurstCompile]
     // Find Closest Target
@@ -80,7 +80,7 @@ public class FindTargetJobSystem : JobComponentSystem {
     }
 
     [RequireComponentTag(typeof(Unit))]
-    [ExcludeComponent(typeof(HasTarget))]
+    [ExcludeComponent(typeof(HasTarget), typeof(IsDead))]
     [BurstCompile]
     // Add HasTarget Component to Entities that have a Closest Target
     private struct AddComponentJob : IJobForEachWithEntity<Translation> {
@@ -97,11 +97,12 @@ public class FindTargetJobSystem : JobComponentSystem {
     }
 
     [RequireComponentTag(typeof(Unit))]
-    [ExcludeComponent(typeof(HasTarget))]
+    [ExcludeComponent(typeof(HasTarget), typeof(IsDead))]
     [BurstCompile]
     private struct FindTargetQuadrantSystemJob : IJobForEachWithEntity<Translation, QuadrantEntity, AttackData> {
 
         [ReadOnly] public NativeMultiHashMap<int, QuadrantData> quadrantMultiHashMap;
+        [ReadOnly] public ComponentDataFromEntity<IsDead> isDeadGetter;
         public NativeArray<Entity> closestTargetEntityArray;
 
         public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref QuadrantEntity quadrantEntity, ref AttackData attackData) {
@@ -121,6 +122,10 @@ public class FindTargetJobSystem : JobComponentSystem {
             FindTarget(hashMapKey - 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
 
             closestTargetEntityArray[index] = closestTargetEntity;
+            if (closestTargetEntity != Entity.Null)
+            {
+                Debug.Log("Character of type " + attackData.CharacterType + " has a new target: ");// + closestTargetEntity);
+            }
         }
 
         private void FindTarget(int hashMapKey, float3 unitPosition, QuadrantEntity quadrantEntity, ref Entity closestTargetEntity, ref float closestTargetDistance, ref AttackData attackData) {
@@ -128,7 +133,9 @@ public class FindTargetJobSystem : JobComponentSystem {
             NativeMultiHashMapIterator<int> nativeMultiHashMapIterator;
             if (quadrantMultiHashMap.TryGetFirstValue(hashMapKey, out quadrantData, out nativeMultiHashMapIterator)) {
                 do {
-                    if (quadrantEntity.typeEnum != quadrantData.quadrantEntity.typeEnum && math.distancesq(unitPosition, quadrantData.position) < attackData.Range) {
+                    var isDead = isDeadGetter.Exists(quadrantData.entity);
+
+                    if (!isDead && quadrantEntity.typeEnum != quadrantData.quadrantEntity.typeEnum && math.distancesq(unitPosition, quadrantData.position) < attackData.Range) {
                         if (closestTargetEntity == Entity.Null) {
                             // No target
                             closestTargetEntity = quadrantData.entity;
@@ -160,12 +167,15 @@ public class FindTargetJobSystem : JobComponentSystem {
 
         bool useQuadrantSystem = GameController.Instance.UseQuadrantSystem;
         if (useQuadrantSystem) {
-            EntityQuery unitQuery = GetEntityQuery(typeof(MeleeUnit), ComponentType.Exclude<HasTarget>());
+            EntityQuery unitQuery = GetEntityQuery(typeof(Unit), ComponentType.Exclude<HasTarget>(), ComponentType.Exclude<IsDead>());
             NativeArray<Entity> closestTargetEntityArray = new NativeArray<Entity>(unitQuery.CalculateEntityCount(), Allocator.TempJob);
+
+            var isDeadGetter = GetComponentDataFromEntity<IsDead>(true);
 
             FindTargetQuadrantSystemJob findTargetQuadrantSystemJob = new FindTargetQuadrantSystemJob {
                 quadrantMultiHashMap = QuadrantSystem.quadrantMultiHashMap,
                 closestTargetEntityArray = closestTargetEntityArray,
+                isDeadGetter = isDeadGetter
             };
             JobHandle jobHandle = findTargetQuadrantSystemJob.Schedule(this, inputDeps);
 
@@ -189,7 +199,7 @@ public class FindTargetJobSystem : JobComponentSystem {
             };
             JobHandle jobHandle = fillArrayEntityWithPositionJob.Schedule(this, inputDeps);
 
-            EntityQuery unitQuery = GetEntityQuery(typeof(MeleeUnit), ComponentType.Exclude<HasTarget>());
+            EntityQuery unitQuery = GetEntityQuery(typeof(Unit), ComponentType.Exclude<HasTarget>());
             NativeArray<Entity> closestTargetEntityArray = new NativeArray<Entity>(unitQuery.CalculateEntityCount(), Allocator.TempJob);
 
             // Find Closest Target

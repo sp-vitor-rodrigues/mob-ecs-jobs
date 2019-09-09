@@ -141,6 +141,7 @@ public struct AttackData : IComponentData
     public float Range;
     public float Time;
     public int Damage;
+    public CharacterTypeData.CharactersType CharacterType;
 }
 
 [DisableAutoCreation]
