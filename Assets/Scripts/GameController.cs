@@ -153,6 +153,26 @@ public struct MoveTo : IComponentData {
     public float Distance;
 }
 
+public struct Orc : IComponentData
+{
+}
+
+public struct Ogre : IComponentData
+{
+}
+
+public struct Knight : IComponentData
+{
+}
+
+public struct Ranger : IComponentData
+{
+}
+
+public struct Wizard : IComponentData
+{
+}
+
 public class GameController : MonoBehaviour
 {
     const int POSITION_SLICES = 20;
@@ -162,6 +182,8 @@ public class GameController : MonoBehaviour
     public Camera MainCamera;
 
     public SlicePositionData[] SlicePositionData = new SlicePositionData[POSITION_SLICES];
+
+    public ChangeUnitNumber ChangeUnitNumber;
 
     static GameController _instance;
 
@@ -304,6 +326,25 @@ public class GameController : MonoBehaviour
 
         foreach (Entity entity in entityArray)
         {
+            switch (charData.CharacterType)
+            {
+                case CharacterTypeData.CharactersType.Knight:
+                    _entityManager.AddComponent(entity, typeof(Knight));
+                    break;
+                case CharacterTypeData.CharactersType.Orc:
+                    _entityManager.AddComponent(entity, typeof(Orc));
+                    break;
+                case CharacterTypeData.CharactersType.Ogre:
+                    _entityManager.AddComponent(entity, typeof(Ogre));
+                    break;
+                case CharacterTypeData.CharactersType.Ranger:
+                    _entityManager.AddComponent(entity, typeof(Ranger));
+                    break;
+                case CharacterTypeData.CharactersType.Wizard:
+                    _entityManager.AddComponent(entity, typeof(Wizard));
+                    break;
+            }
+            
             var position = new float3(
                 faction == global::SlicePositionData.FactionType.Attackers ? UnityEngine.Random.Range(10f, 30f) : -10f,
                 UnityEngine.Random.Range(-5f, 5f), 0);
@@ -423,6 +464,8 @@ public class GameController : MonoBehaviour
     {
         if (_entityManager.HasComponent(entity, typeof(Projectile)))
         {
+            _entityManager.RemoveComponent(entity, typeof(MoveTo));
+
             var projectile = _entityManager.GetComponentData<Projectile>(entity);
             var health = _entityManager.GetComponentData<HealthData>(projectile.Target);
 
@@ -430,8 +473,9 @@ public class GameController : MonoBehaviour
             {
                 health.CurrentHealth -= projectile.Damage;
             }
+            _entityManager.SetComponentData(projectile.Target, health);
 
-            if (!health.IsDead)
+            if (health.IsDead)
             {
                 _entityManager.RemoveComponent(entity, typeof(DoAttack));
                 _entityManager.RemoveComponent(entity, typeof(HasTarget));

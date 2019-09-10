@@ -8,6 +8,6 @@ public class CleanAndReloadScene : MonoBehaviour
     void Start()
     {
         Resources.UnloadUnusedAssets();
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("SCN_Map");
     }
 }

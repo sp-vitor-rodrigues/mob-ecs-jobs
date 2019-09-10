@@ -14,11 +14,21 @@ struct ProjectileData
     public int Damage;
 }
 
+struct MeleeData
+{
+    public Translation From;
+    public Translation To;
+    public Entity Entity;
+    public Entity Target;
+    public int Damage;
+}
+
 [UpdateAfter(typeof(FindTargetJobSystem))]
 public class AttackJobSystem : JobComponentSystem
 {
     EndSimulationEntityCommandBufferSystem _endSimulationEntityCommandBufferSystem;
     NativeQueue<ProjectileData> _projectiles;
+    NativeQueue<MeleeData> _melees;
     EntityManager _entityManager;
 
     EntityArchetype _arrow;
@@ -26,6 +36,7 @@ public class AttackJobSystem : JobComponentSystem
     protected override void OnCreate() {
         _endSimulationEntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         _projectiles = new NativeQueue<ProjectileData>(Allocator.Persistent);
+        _melees = new NativeQueue<MeleeData>(Allocator.Persistent);
         base.OnCreate();
         _entityManager = World.EntityManager;
         _arrow = _entityManager.CreateArchetype(
@@ -42,10 +53,11 @@ public class AttackJobSystem : JobComponentSystem
     {
         base.OnDestroy();
         _projectiles.Dispose();
+        _melees.Dispose();
     }
 
     [ExcludeComponent(typeof(DoAttack))]
-    [BurstCompile]
+    //[BurstCompile]
     // Add Attacking Component to Entities that have HasTarget
     private struct AddComponentJob : IJobForEachWithEntity<Translation, HasTarget>
     {
@@ -72,17 +84,19 @@ public class AttackJobSystem : JobComponentSystem
 
     [ExcludeComponent(typeof(IsDead))]
     [BurstCompile]
-    private struct AttackEntityJob : IJobForEachWithEntity<DoAttack, AttackData>
+    private struct AttackEntityJob : IJobForEachWithEntity<DoAttack>
     {
         [NativeDisableContainerSafetyRestriction]
-        public NativeQueue<ProjectileData>.ParallelWriter Queue;
+        public NativeQueue<ProjectileData>.ParallelWriter QueueProjectiles;
+        public NativeQueue<MeleeData>.ParallelWriter QueueMelees;
         [ReadOnly] public ComponentDataFromEntity<HealthData> HealthDataGetter;
         [ReadOnly] public ComponentDataFromEntity<Translation> TranslationDataGetter;
+        [ReadOnly] public ComponentDataFromEntity<AttackData> AttackDataGetter;
         [ReadOnly] public float DeltaTime;
 
         public EntityCommandBuffer.Concurrent EntityCommandBuffer;
 
-        public void Execute(Entity entity, int index, ref DoAttack doAttack, ref AttackData attackData)
+        public void Execute(Entity entity, int index, ref DoAttack doAttack)
         {
             if (doAttack.TargetEntity != Entity.Null)
             {
@@ -90,11 +104,13 @@ public class AttackJobSystem : JobComponentSystem
                 if (doAttack.ElapsedTime >= doAttack.AttackTime)
                 {
                     doAttack.ElapsedTime = 0f;
+                    var attackData = AttackDataGetter[entity];
+
+                    var position = TranslationDataGetter[entity];
+                    var targetPosition = TranslationDataGetter[doAttack.TargetEntity];
                     if (attackData.CharacterType == CharacterTypeData.CharactersType.Ranger ||
                         attackData.CharacterType == CharacterTypeData.CharactersType.Wizard)
                     {
-                        var position = TranslationDataGetter[entity];
-                        var targetPosition = TranslationDataGetter[doAttack.TargetEntity];
                         ProjectileData data = new ProjectileData()
                         {
                             From = position,
@@ -102,62 +118,46 @@ public class AttackJobSystem : JobComponentSystem
                             Target = doAttack.TargetEntity,
                             Damage = doAttack.Damage
                         };
-                        Queue.Enqueue(data);
+                        QueueProjectiles.Enqueue(data);
                     }
                     else
                     {
-                        var healthData = HealthDataGetter[doAttack.TargetEntity];
-                        if (!healthData.IsDead)
+                        MeleeData data = new MeleeData()
                         {
-                            healthData.CurrentHealth -= doAttack.Damage;
-//                        Debug.Log("Caused " + doAttack.Damage + " to " + doAttack.TargetEntity);
-                        }
-
-                        if (!healthData.IsDead)
-                        {
-                            EntityCommandBuffer.RemoveComponent(index, entity, typeof(DoAttack));
-                            EntityCommandBuffer.RemoveComponent(index, entity, typeof(HasTarget));
-                            EntityCommandBuffer.AddComponent(index, doAttack.TargetEntity, typeof(IsDead));
-                        }
+                            From = position,
+                            To = targetPosition,
+                            Target = doAttack.TargetEntity,
+                            Entity = entity,
+                            Damage = doAttack.Damage
+                        };
+                        QueueMelees.Enqueue(data);
                     }
                 }
             }
         }
     }
 
-    /*[BurstCompile]
-    private struct RemoveDeadJob : IJobForEachWithEntity<IsDead>
-    {
-        public EntityCommandBuffer.Concurrent EntityCommandBuffer;
-
-        public void Execute(Entity entity, int index, ref IsDead dead)
-        {
-            // TODO: Particles? Animation?
-            EntityCommandBuffer.RemoveComponent(index, entity, typeof(IsDead));
-            EntityCommandBuffer.DestroyEntity(index, entity);
-            Debug.Log("Removed dead " + entity);
-        }
-    }*/
-
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         var healthDataGetter = GetComponentDataFromEntity<HealthData>(true);
         var translationDataGetter = GetComponentDataFromEntity<Translation>(true);
+        var attackDataGetter = GetComponentDataFromEntity<AttackData>(true);
         _projectiles.Clear();
 
         var attackEntityJob = new AttackEntityJob
         {
-            Queue = _projectiles.AsParallelWriter(),
+            QueueProjectiles = _projectiles.AsParallelWriter(),
+            QueueMelees = _melees.AsParallelWriter(),
             HealthDataGetter = healthDataGetter,
             DeltaTime = Time.deltaTime,
             EntityCommandBuffer = _endSimulationEntityCommandBufferSystem.CreateCommandBuffer().ToConcurrent(),
             TranslationDataGetter = translationDataGetter,
+            AttackDataGetter = attackDataGetter,
         };
         var handle = attackEntityJob.Schedule(this, inputDeps);
         //_endSimulationEntityCommandBufferSystem.AddJobHandleForProducer(handle);
         handle.Complete();
 
-        var attackDataGetter = GetComponentDataFromEntity<AttackData>(true);
 
         // Add Attacking Component to Entities that have a Closest Target
         var addComponentJob = new AddComponentJob
@@ -175,7 +175,7 @@ public class AttackJobSystem : JobComponentSystem
             var arrow = _entityManager.CreateEntity(_arrow);
             _entityManager.SetComponentData(arrow, new Translation() { Value = projectileData.From.Value } );
             _entityManager.SetComponentData(arrow, new Projectile() { Target = projectileData.Target, Damage = projectileData.Damage } );
-            _entityManager.SetComponentData(arrow, new MoveTo() { Move = true, Position = projectileData.To.Value, MoveSpeed = 1.2f, Distance = 0.01f } );
+            _entityManager.SetComponentData(arrow, new MoveTo() { Move = true, Position = projectileData.To.Value, MoveSpeed = 2.0f, Distance = 0.01f } );
             _entityManager.SetComponentData(arrow,
                 new SpriteSheetAnimation_Data
                 {
@@ -184,27 +184,49 @@ public class AttackJobSystem : JobComponentSystem
                     frameTimer = 0f,
                     frameTimerMax = .1f,
                     inverted = false,
-                    yIndex = 14
+                    yIndex = 14,
+                    OneLiner = false
                 }
             );
-            GameController.Instance.AddPositionData(arrow);
+            //GameController.Instance.AddPositionData(arrow);
         }
 
-        /*var removeDeadJob = new RemoveDeadJob()
+        while (_melees.Count > 0)
         {
-            EntityCommandBuffer = _endSimulationEntityCommandBufferSystem.CreateCommandBuffer().ToConcurrent(),
-        };
-        handle = removeDeadJob.Schedule(this, handle);*/
+            var meleeData = _melees.Dequeue();
+            var health = _entityManager.GetComponentData<HealthData>(meleeData.Target);
 
+            if (!health.IsDead)
+            {
+                health.CurrentHealth -= meleeData.Damage;
+            }
+            _entityManager.SetComponentData(meleeData.Target, health);
 
-        /*var entitiesToRemove = unitQuery.ToEntityArray(Allocator.TempJob);
-        for (int i = 0; i < entitiesToRemove.Length; i++)
-        {
-            var entity = entitiesToRemove[i];
-            Debug.Log("Removed dead " + entity);
-            _entityManager.DestroyEntity(entity);
+            if (health.IsDead)
+            {
+                _entityManager.RemoveComponent(meleeData.Entity, typeof(DoAttack));
+                _entityManager.RemoveComponent(meleeData.Entity, typeof(HasTarget));
+                _entityManager.AddComponent(meleeData.Target, typeof(IsDead));
+            }
+
         }
-        entitiesToRemove.Dispose();*/
+        var totalDefenders = 0;
+        var totalAttackers = 0;
+        EntityQuery unitQuery = GetEntityQuery(typeof(Orc), ComponentType.Exclude<IsDead>());
+        totalAttackers += unitQuery.CalculateEntityCount();
+        unitQuery = GetEntityQuery(typeof(Ogre), ComponentType.Exclude<IsDead>());
+        totalAttackers += unitQuery.CalculateEntityCount();
+
+        unitQuery = GetEntityQuery(typeof(Knight), ComponentType.Exclude<IsDead>());
+        totalDefenders += unitQuery.CalculateEntityCount();
+        unitQuery = GetEntityQuery(typeof(Ranger), ComponentType.Exclude<IsDead>());
+        totalDefenders += unitQuery.CalculateEntityCount();
+        unitQuery = GetEntityQuery(typeof(Wizard), ComponentType.Exclude<IsDead>());
+        totalDefenders += unitQuery.CalculateEntityCount();
+
+        GameController.Instance.ChangeUnitNumber.SetNumberOfAttackers(totalAttackers);
+        GameController.Instance.ChangeUnitNumber.SetNumberOfDefenders(totalDefenders);
+
         return handle;
     }
 }

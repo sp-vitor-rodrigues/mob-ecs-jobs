@@ -81,7 +81,7 @@ public class FindTargetJobSystem : JobComponentSystem {
 
     [RequireComponentTag(typeof(Unit))]
     [ExcludeComponent(typeof(HasTarget), typeof(IsDead))]
-    [BurstCompile]
+//    [BurstCompile]
     // Add HasTarget Component to Entities that have a Closest Target
     private struct AddComponentJob : IJobForEachWithEntity<Translation> {
 
@@ -122,10 +122,10 @@ public class FindTargetJobSystem : JobComponentSystem {
             FindTarget(hashMapKey - 1 - QuadrantSystem.quadrantYMultiplier, unitPosition, quadrantEntity, ref closestTargetEntity, ref closestTargetDistance, ref attackData);
 
             closestTargetEntityArray[index] = closestTargetEntity;
-            if (closestTargetEntity != Entity.Null)
+            /*if (closestTargetEntity != Entity.Null)
             {
                 Debug.Log("Character of type " + attackData.CharacterType + " has a new target: ");// + closestTargetEntity);
-            }
+            }*/
         }
 
         private void FindTarget(int hashMapKey, float3 unitPosition, QuadrantEntity quadrantEntity, ref Entity closestTargetEntity, ref float closestTargetDistance, ref AttackData attackData) {

@@ -43,7 +43,7 @@ public class UnitMoveSystem : JobComponentSystem
                 else
                 {
                     Queue.Enqueue(entity);
-                    moveTo.Move = false;
+                    //moveTo.Move = false;
                     // Already there
                 }
             }
@@ -58,12 +58,15 @@ public class UnitMoveSystem : JobComponentSystem
             Queue = _completedMovement.AsParallelWriter(),
             deltaTime = Time.deltaTime,
         };
-        return job.Schedule(this, inputDeps);
+        var handle = job.Schedule(this, inputDeps);
+        handle.Complete();
 
         while (_completedMovement.Count > 0)
         {
             GameController.Instance.EntityReachedTarget(_completedMovement.Dequeue());
         }
+
+        return handle;
     }
 
 }

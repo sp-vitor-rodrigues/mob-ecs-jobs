@@ -6,6 +6,8 @@ public class ChangeUnitNumber : MonoBehaviour
 {
     public TMP_InputField DefendersInputField;
     public TMP_InputField AttackerInputField;
+    public TextMeshProUGUI DefendersAmount;
+    public TextMeshProUGUI AttackersAmount;
 
     private void Awake()
     {
@@ -46,5 +48,15 @@ public class ChangeUnitNumber : MonoBehaviour
         PlayerPrefs.SetInt("NumberOfAttackers", inputResult);
 
         SceneManager.LoadScene("EmptyScene");
+    }
+
+    public void SetNumberOfDefenders(int amount)
+    {
+        DefendersAmount.text = amount.ToString();
+    }
+
+    public void SetNumberOfAttackers(int amount)
+    {
+        AttackersAmount.text = amount.ToString();
     }
 }

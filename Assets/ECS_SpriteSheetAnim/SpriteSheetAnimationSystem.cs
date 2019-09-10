@@ -27,6 +27,8 @@ public struct SpriteSheetAnimation_Data : IComponentData {
     public bool inverted;
     public int yIndex;
 
+    public bool OneLiner;
+
     public Vector4 uv;
     public Matrix4x4 matrix;
 }
@@ -58,7 +60,7 @@ public class SpriteSheetAnimation_Animate : JobComponentSystem {
                 }
 
                 float uvWidth = 1f / spriteSheetAnimationData.frameCount;
-                float uvHeight = 1f / 15f;
+                float uvHeight = spriteSheetAnimationData.OneLiner ? 1f / 480f : 1f / 15f;
                 float uvOffsetX = uvWidth * spriteSheetAnimationData.currentFrame;
                 float uvOffsetY = 1f - (uvHeight * (spriteSheetAnimationData.yIndex + 1f));
                 spriteSheetAnimationData.uv = new Vector4(uvWidth, uvHeight, uvOffsetX, uvOffsetY);
